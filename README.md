@@ -2,7 +2,7 @@
 
   
 
-<img  src="./imgs/altr-logo.svg"  alt="ALTR log"  title="ALTR"  align="right"  height="40">
+<img  src="./imgs/altr-logo.jpg"  alt="ALTR log"  title="ALTR"  align="right"  height="42">
 
   
 
@@ -73,9 +73,9 @@ Integration Flowchart:
 
 **Install From Source**
 
-    $ git clone <**TODO**: github link>
+    $ git clone https://github.com/altrsoftware/altr-alation-tag-policy.git
     
-    $ cd <**TODO**: directory>
+    $ cd altr-alation-tag-policy
 
 
 
@@ -152,60 +152,10 @@ This application was built using the following node packages and their respected
 ## Support
 
 Need support to get this application running? Have questions, concerns or comments?
-Email *application-engineers@altr.com* with a subject line of "Alation Classification Integration Support".
 
+Email *application-engineers@altr.com* with a subject line of "ALTR + Alation Tags Policy Integration".
+   
   
-
-  
-
-## Roadmap
-
-If you have ideas for releases in the future, it is a good idea to list them in the README.
-
-  
-
-**TODO** (Support multiple snowflake instances?) (If you remove tag in alation this could check and remove values from snowflake columns?)
-
-  
-
-  
-
-## Contributing
-
-  
-
-State if you are open to contributions and what your requirements are for accepting them.
-
-  
-
-  
-
-For people who want to make changes to your project, it's helpful to have some documentation on how to get started. Perhaps there is a script that they should run or some environment variables that they need to set. Make these steps explicit. These instructions could also be useful to your future self.
-
-  
-
-  
-
-You can also document commands to lint the code or run tests. These steps help to ensure high code quality and reduce the likelihood that the changes inadvertently break something. Having instructions for running tests is especially helpful if it requires external setup, such as starting a Selenium server for testing in a browser.
-
-  
-
-**TODO**
-
-  
-
-**Testing**
-
-    $ npm run test
-
-  
-
 ## License
 
-  
-
-For open source projects, say how it is licensed.
-
-  
-
-**TODO**
+[GNU General Public License](gnu-gpl-v3.0.md)
