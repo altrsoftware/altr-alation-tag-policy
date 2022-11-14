@@ -2,7 +2,7 @@ const axios = require('axios').default;
 const axiosRetry = require('axios-retry');
 
 axiosRetry(axios, {
-	retries: 1,
+	retries: 2,
 	retryCondition: (error) => {
 		return axiosRetry.isNetworkOrIdempotentRequestError(error)
 			|| error.response.status.toString()[0] == '4' || error.response.status.toString()[0] == '5';
@@ -10,18 +10,75 @@ axiosRetry(axios, {
 	retryDelay: axiosRetry.exponentialDelay,
 });
 
-// ----------- SUBJECT INFO -----------
 /**
- * Gets info about column in Alation
+ * Gets data of custom fields
+ * @param {String} alationDomain The domain of your Alation organization 
+ * @param {String} alationApiAccessToken The Alation API Access Token (short-term) 
+ * @param {String} field_type The custom field type
+ * @param {String} name_plural The custom field name
+ * @returns JS Array of Objects
+ */
+let getMultipleCustomFields = async (alationDomain, alationApiAccessToken, field_type, name_plural) => {
+	const options = {
+		method: 'GET',
+		url: encodeURI(`https://${alationDomain}/integration/v2/custom_field/?field_type=${field_type}&name_plural=${name_plural}`),
+		headers: { accept: 'application/json', TOKEN: alationApiAccessToken },
+	};
+
+	try {
+		let response = await axios.request(options);
+		return response.data;
+	} catch (error) {
+		console.error('GET multiple custom fields error');
+		if (error.response) {
+			console.error(error.response.data);
+			console.error(error.response.status);
+		}
+		throw error;
+	}
+}
+exports.getMultipleCustomFields = getMultipleCustomFields;
+
+/**
+ * Gets list of databases from Alation 
+ * @param {String} alationDomain The domain of your Alation organization 
+ * @param {String} alationApiAccessToken The Alation API Access Token (short-term) 
+ * @param {Boolean} includeUndeployed Specifies if undeployed datasources should be included in retrieved list
+ * @param {Boolean} includeHidden Specifies if hidden datasources should be included in retrieved list 
+ * @returns JS Array of Objects
+ */
+let getDatabases = async (alationDomain, alationApiAccessToken, includeUndeployed, includeHidden) => {
+	const options = {
+		method: 'GET',
+		url: encodeURI(`https://${alationDomain}/integration/v1/datasource/?include_undeployed=${includeUndeployed}&include_hidden=${includeHidden}`),
+		headers: { accept: 'application/json', TOKEN: alationApiAccessToken },
+	};
+
+	try {
+		let response = await axios.request(options);
+		return response.data;
+	} catch (error) {
+		console.error('GET databases error');
+		if (error.response) {
+			console.error(error.response.data);
+			console.error(error.response.status);
+		}
+		throw error;
+	}
+}
+exports.getDatabases = getDatabases;
+
+/**
+ * Gets columns in Alation using custom field
  * @param {String} alationDomain The domain of your Alation organization
  * @param {String} alationApiAccessToken The Alation API Access Token (short-term) 
  * @param {Number} columnId The ID of the column you are requesting info on 
  * @returns JS Array of Objects
  */
-let getColumnInfoById = async (alationDomain, alationApiAccessToken, columnId) => {
+let getColumns = async (alationDomain, alationApiAccessToken, alationCustomFieldId) => {
 	const options = {
 		method: 'GET',
-		url: encodeURI(`https://${alationDomain}/integration/v2/column/?id=${columnId}`),
+		url: encodeURI(`https://${alationDomain}/integration/v2/column/?custom_fields=[{"field_id":${alationCustomFieldId}}]`),
 		headers: { accept: 'application/json', 'content-type': 'application/json', TOKEN: alationApiAccessToken },
 	};
 
@@ -37,66 +94,8 @@ let getColumnInfoById = async (alationDomain, alationApiAccessToken, columnId) =
 		throw error;
 	}
 };
-exports.getColumnInfoById = getColumnInfoById;
+exports.getColumns = getColumns;
 
-// ----------- TAGS -----------
-/**
- * Gets list of all tags in Alation
-* @param {String} alationDomain The domain of your Alation organization
- * @param {String} alationApiAccessToken The Alation API Access Token (short-term) 
- * @returns JS Array of Objects
- */
-let getTags = async (alationDomain, alationApiAccessToken) => {
-	const options = {
-		method: 'GET',
-		url: encodeURI(`https://${alationDomain}/integration/tag/`),
-		headers: { accept: 'application/json', 'content-type': 'application/json', TOKEN: alationApiAccessToken },
-	};
-
-	try {
-		let response = await axios.request(options);
-		return response.data;
-	} catch (error) {
-		console.error('GET alation tags error');
-		if (error.response) {
-			console.error(error.response.data);
-			console.error(error.response.status);
-		}
-		throw error;
-	}
-};
-exports.getTags = getTags;
-
-/**
- * Gets all subjects that are tagged with specific tag
- * @param {String} alationDomain The domain of your Alation organization
- * @param {String} alationApiAccessToken The Alation API Access Token (short-term) 
- * @param {String} tagName The name of the tag
- * @returns JS Array of Objects
- */
-let getColumnsOfTag = async (alationDomain, alationApiAccessToken, tagName) => {
-	const options = {
-		method: 'GET',
-		url: encodeURI(`https://${alationDomain}/integration/tag/${tagName}/subject/`),
-		headers: { accept: 'application/json', 'content-type': 'application/json', TOKEN: alationApiAccessToken },
-	};
-
-	try {
-		let response = await axios.request(options);
-		response.data = response.data.filter(subject => { return subject.subject.otype == 'attribute' });
-		return response.data;
-	} catch (error) {
-		console.error('GET alation columns of alation tag');
-		if (error.response) {
-			console.error(error.response.data);
-			console.error(error.response.status);
-		}
-		throw error;
-	}
-};
-exports.getColumnsOfTag = getColumnsOfTag;
-
-// ----------- USERS -----------
 /**
  * Gets user info based on email
  * @param {String} alationDomain The domain of your Alation organization
