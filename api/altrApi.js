@@ -145,6 +145,7 @@ let updateSnowflakeDbInAltr = async (altrDomain, basicAuth, dbName, dbId) => {
 		},
 		data: {
 			shouldClassify: true,
+			dataUsageHistory: true,
 			classificationType: '3',
 		}
 	};
