@@ -3,25 +3,24 @@ const axiosRetry = require('axios-retry');
 
 
 axiosRetry(axios, {
-	retries: 1,
+	retries: 2,
 	retryCondition: (error) => {
-		// console.warn('Axios Retry Triggered By ' + error)
 		return axiosRetry.isNetworkOrIdempotentRequestError(error)
-			|| error.response.status.toString()[0] == '4' || error.response.status.toString()[0] == '5';
+			|| error.response.status.toString()[0] == '4' || error.response.status.toString()[0] == '5' && error.response.status.toString() != '409';
 	},
 	retryDelay: axiosRetry.exponentialDelay,
 });
 
 /**
- * Gets Snowflake databases in ALTR
+ * Gets databases in ALTR of specific database type
  * @param {String} altrDomain The domain of your ALTR organization
  * @param {String} basicAuth Base64 encoded string using your ALTR API key and password 
  * @returns JS Array of Objects
  */
-let getAltrSnowflakeDbs = async (altrDomain, basicAuth) => {
+let getDatabases = async (altrDomain, basicAuth, databaseType) => {
 	const options = {
 		method: 'GET',
-		url: encodeURI(`https://${altrDomain}/api/databases?databaseType=snowflake_external_functions`),
+		url: encodeURI(`https://${altrDomain}/api/databases?databaseType=${databaseType}`),
 		headers: {
 			'Authorization': 'Basic ' + basicAuth,
 			'Content-Type': 'application/json'
@@ -30,9 +29,9 @@ let getAltrSnowflakeDbs = async (altrDomain, basicAuth) => {
 
 	try {
 		let response = await axios.request(options);
-		return response.data;
+		return response.data.data;
 	} catch (error) {
-		console.error('GET altr snowflake databases error');
+		console.error('GET altr databases error');
 		if (error.response) {
 			console.error(error.response.data);
 			console.error(error.response.status);
@@ -41,7 +40,39 @@ let getAltrSnowflakeDbs = async (altrDomain, basicAuth) => {
 	}
 
 };
-exports.getAltrSnowflakeDbs = getAltrSnowflakeDbs;
+exports.getDatabases = getDatabases;
+
+
+/**
+ * Gets Snowflake databases in ALTR
+ * @param {String} altrDomain The domain of your ALTR organization
+ * @param {String} basicAuth Base64 encoded string using your ALTR API key and password 
+ * @returns JS Array of Objects
+ */
+let getColumns = async (altrDomain, basicAuth) => {
+	const options = {
+		method: 'GET',
+		url: encodeURI(`https://${altrDomain}/api/data`),
+		headers: {
+			'Authorization': 'Basic ' + basicAuth,
+			'Content-Type': 'application/json'
+		}
+	};
+
+	try {
+		let response = await axios.request(options);
+		return response.data.data;
+	} catch (error) {
+		console.error('GET altr databases error');
+		if (error.response) {
+			console.error(error.response.data);
+			console.error(error.response.status);
+		}
+		throw error;
+	}
+
+};
+exports.getColumns = getColumns;
 
 /**
  * Adds Snowflake database to ALTR
@@ -83,7 +114,7 @@ let addSnowflakeDbToAltr = async (altrDomain, basicAuth, dbName, dbPassword, hos
 
 	try {
 		let response = await axios.request(options);
-		console.log('Adding ALTR database: ' + dbName);
+		console.log('Added ALTR database: ' + dbName);
 		return response.data;
 	} catch (error) {
 		console.error('POST add database to altr error');
@@ -137,7 +168,7 @@ let updateSnowflakeDbInAltr = async (altrDomain, basicAuth, dbName, dbPassword, 
 
 	try {
 		let response = await axios.request(options);
-		console.log('Updating ALTR database: ' + dbName);
+		console.log('Updated ALTR database: ' + dbName);
 		return response.data;
 	} catch (error) {
 		console.error('PATCH update database in altr error');
@@ -178,7 +209,7 @@ let addColumnToAltr = async (altrDomain, basicAuth, dbId, tableName, columnName)
 
 	try {
 		let response = await axios.request(options);
-		console.log('Adding ALTR column: ' + columnName);
+		console.log('Added ALTR column: ' + columnName);
 		return response.data;
 	} catch (error) {
 		if (error.response) {
@@ -193,6 +224,13 @@ let addColumnToAltr = async (altrDomain, basicAuth, dbId, tableName, columnName)
 };
 exports.addColumnToAltr = addColumnToAltr;
 
+/**
+ * Gets the status of classification being run on a ALTR database
+ * @param {String} altrDomain The domain of your ALTR organization
+ * @param {String} basicAuth Base64 encoded string using your ALTR API key and password 
+ * @param {Number} dbId The ID of the ALTR database
+ * @returns JS Object
+ */
 let getClassificationStatus = async (altrDomain, basicAuth, dbId) => {
 	let options = {
 		method: 'GET',
