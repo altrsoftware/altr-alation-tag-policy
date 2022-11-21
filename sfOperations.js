@@ -28,6 +28,7 @@ let updateTagValue = async (connectionPool, database, schema, tagValue) => {
 									throw error;
 								} else {
 									console.log(`Statement successfully executed: ${stmt.getSqlText()}`);
+									await new Promise(r => setTimeout(r, 10000));
 
 									await clientConnection.execute({
 										sqlText: 'alter tag alation_tag add allowed_values ' + `'${tagValue}'`,
@@ -126,6 +127,7 @@ let applyPolicyTags = async (account, username, password, alationColumns, custom
 				const customField = column.custom_fields.find(customField => customField.field_id === customFieldId);
 				for (const tag of customField.value) {
 					await updateTagValue(connectionPool, column.key.split('.')[1], column.key.split('.')[2], tag);
+					await new Promise(r => setTimeout(r, 2000));
 					await applyToColumn(connectionPool, column.key.split('.')[1], column.key.split('.')[2], column.key.split('.')[3], column.key.split('.')[4], tag);
 				}
 			}

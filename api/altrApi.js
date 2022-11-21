@@ -132,36 +132,19 @@ exports.addSnowflakeDbToAltr = addSnowflakeDbToAltr;
  * @param {String} altrDomain The domain of your ALTR organization
  * @param {String} basicAuth Base64 encoded string using your ALTR API key and password 
  * @param {String} dbName The name of the database on the host you are trying to connect 
- * @param {String} dbPassword The password of the database on the host you're trying to connect 
- * @param {String} hostname The host where the database you're trying to connect is located 
- * @param {String} dbUsername The username of the ALTR service user 
- * @param {String} snowflakeRole The role the ALTR service user is under 
- * @param {String} warehouseName The warehouse that was granted to the ALTR service user
  * @param {Number} dbId The database ID that correlates to the data being govern or protected belongs to
  * @returns JS Object
  */
-let updateSnowflakeDbInAltr = async (altrDomain, basicAuth, dbName, dbPassword, hostname, dbUsername, snowflakeRole, warehouseName, dbId) => {
+let updateSnowflakeDbInAltr = async (altrDomain, basicAuth, dbName, dbId) => {
 	let options = {
 		method: 'PATCH',
-		url: encodeURI(`https://${altrDomain}/api/databases/${encodeURIComponent(dbId)}`),
+		url: encodeURI(`https://${altrDomain}/api/databases/${dbId}`),
 		headers: {
 			'Authorization': 'Basic ' + basicAuth,
 			'Content-Type': 'application/json'
 		},
 		data: {
-			friendlyDatabaseName: dbName.toUpperCase(),
-			databasePort: 443,
-			maxNumberOfConnections: '5',
-			maxNumberOfBatches: '15',
-			databaseName: dbName,
-			databasePassword: dbPassword,
-			databaseType: 'snowflake_external_functions',
-			hostname: hostname,
-			databaseUsername: dbUsername,
-			snowflakeRole: snowflakeRole,
-			warehouseName: warehouseName,
 			shouldClassify: true,
-			dataUsageHistory: true,
 			classificationType: '3',
 		}
 	};
