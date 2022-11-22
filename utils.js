@@ -74,24 +74,3 @@ let returnNewGovernColumns = (alationColumns, altrDbs) => {
 	return governColumns;
 }
 exports.returnNewGovernColumns = returnNewGovernColumns;
-
-/**
- * Loops through all databases that were added to ALTR and continuously polls API to check if database classification is complete
- * @param {Array} dbIds Array of ALTR database IDs
- * @returns Promise
- */
-let checkDbStatus = async (dbIds) => {
-	try {
-		for (const dbId in dbIds) {
-			let status;
-			while (status == 'IN_PROGRESS') {
-				let response = await altr.getClassificationStatus(process.env.ALTR_DOMAIN, altrAuth, dbId);
-				status = response.status;
-			}
-		}
-		return;
-	} catch (error) {
-		throw error;
-	}
-};
-exports.checkDbStatus = checkDbStatus;

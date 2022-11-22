@@ -43,7 +43,7 @@ let main = async () => {
 			console.dir(alationColumns, { depth: null });
 
 			// Updates corresponding Snowflake columns with 'Policy Tags'
-			await snowflake.applyPolicyTags(process.env.SF_ACCOUNT, process.env.SF_DB_USERNAME, process.env.SF_DB_PASSWORD, alationColumns, alationCustomFieldId);
+			await snowflake.applyPolicyTags(process.env.SF_ACCOUNT, process.env.SF_DB_USERNAME, process.env.SF_DB_PASSWORD, process.env.SF_ROLE, alationColumns, alationCustomFieldId);
 
 			// Gets Snowflake databases in ALTR
 			let altrDbs = await altr.getDatabases(process.env.ALTR_DOMAIN, ALTR_AUTH, 'snowflake_external_functions');
@@ -55,15 +55,23 @@ let main = async () => {
 			console.log('\nNEW AND OLD DATABASES: ');
 			console.dir(newAndOldDbs, { depth: null });
 
-			// Add new Snowflake databases to ALTR
-			let dbIds = [];
-			for (const newDb of newAndOldDbs.newDbs) {
-				let response = await altr.addSnowflakeDbToAltr(process.env.ALTR_DOMAIN, ALTR_AUTH, newDb, process.env.SF_DB_PASSWORD, process.env.SF_HOSTNAME, process.env.SF_DB_USERNAME, process.env.SF_ROLE, process.env.SF_WAREHOUSE);
-				dbIds.push(response.id);
-			}
+			// Add new Snowflake databases to ALTR (if Partner Connect else Self made ALTR Service User)
+			if (newAndOldDbs.newDbs.length != 0) {
+				if (process.env.SF_ROLE === 'PC_ALTR_ROLE') {
+					let accounts = await altr.getSnowflakeAccounts(process.env.ALTR_DOMAIN, ALTR_AUTH);
+					let accountId = accounts.accounts.find(account => account.name.toUpperCase().includes(process.env.SF_HOSTNAME.toUpperCase())).id;
 
-			// Checks if all new databases have finished importing Snowflake Object Tags
-			if (dbIds.length != 0) await utils.checkDbStatus(dbIds);
+					for (const newDb of newAndOldDbs.newDbs) {
+						let response = await altr.addSnowflakeDbPC(process.env.ALTR_DOMAIN, ALTR_AUTH, newDb, accountId);
+						dbIds.push(response.id);
+					}
+				} else {
+					for (const newDb of newAndOldDbs.newDbs) {
+						let response = await altr.addSnowflakeDb(process.env.ALTR_DOMAIN, ALTR_AUTH, newDb, process.env.SF_DB_PASSWORD, process.env.SF_HOSTNAME, process.env.SF_DB_USERNAME, process.env.SF_ROLE, process.env.SF_WAREHOUSE);
+						dbIds.push(response.id);
+					}
+				}
+			}
 
 			// Refresh ALTR database list
 			altrDbs = await altr.getDatabases(process.env.ALTR_DOMAIN, ALTR_AUTH, 'snowflake_external_functions');
@@ -83,9 +91,11 @@ let main = async () => {
 			// Refreshes list of new and old databases (Should only have 'old' now)
 			newAndOldDbs = utils.returnNewAndOldDbs(alationColumns, altrDbs.databases);
 
-			// Updates old Snowflake databases to import Snowflake Object Tags
+			// Updates old ALTR databases to import Snowflake Object Tags
 			for (const oldDb of newAndOldDbs.oldDbs) {
-				await altr.updateSnowflakeDbInAltr(process.env.ALTR_DOMAIN, ALTR_AUTH, oldDb.dbName, oldDb.dbId);
+				let response = await altr.updateSnowflakeDbInAltr(process.env.ALTR_DOMAIN, ALTR_AUTH, oldDb.dbName, oldDb.dbId);
+				console.log('\nALTR UPDATE DATABASE: ');
+				console.dir(response, { depth: null });
 			}
 
 		} catch (error) {

@@ -55,23 +55,27 @@ Integration Flowchart:
 	// ALATION
 	ALATION_API_ACCESS_TOKEN = "Your Alation API Access Token"
 	ALATION_DOMAIN = "Your Alation domain (example-prod.alationcatalog.com)"
-	ALATION_EMAIL = "The email used to sign in and create the Access Token"
+	ALATION_EMAIL = "The email used to sign in and create the API Access Token"
 	
 	// SNOWFLAKE
 	SF_ACCOUNT = "Snowflake account identifier (exampleorg.us-east-1)"
-	SF_DB_USERNAME = "Your ALTR service user username (PC_ALTR_USER or ALTR_SERVICE_USER)"
-	SF_DB_PASSWORD = "Your ALTR service user password"
+	SF_DB_USERNAME = "Your Snowflake username that has admin rights AND must have ALTR service role granted (PC_ALTR_ROLE or ALTR_SERVICE_ROLE)"
+	SF_DB_PASSWORD = "Your Snowflake password"
 
 	SF_HOSTNAME = "The hostname of your Snowflake instance (example.us-west-3.snowflakecomputing.com)"
-	SF_WAREHOUSE = ""
-	SF_ROLE = "The role your ALTR service user falls under (PC_ALTR_ROLE or ALTR_SERVICE_ROLE)"
+	SF_WAREHOUSE = "Default warehouse your ALTR service role uses"
+	SF_ROLE = "If you connected to ALTR through Snowflake Partner Connect (PC_ALTR_ROLE) | If you created a ALTR service user (ALTR_SERVICE_ROLE)"
 	
-	//ALTR CALL SPECIFICS
+	//ALTR
 	ALTR_DOMAIN = "Your ALTR domain (altrnet.live.altr.com)"
-	ALTR_KEY_NAME = "Your ALTR Managment API key name"
-	ALTR_KEY_PASSWORD = "The password to your key"
+	ALTR_KEY_NAME = "Your ALTR Management API key name"
+	ALTR_KEY_PASSWORD = "Your ALTR Management API key password"
 
-**2. You must add a custom field to your Alation environment for this application to work successfully**
+**2. Grant Role to Snowflake User**
+* The Snowflake user (SF_DB_USERNAME) you put in .env variables file must have the role of PC_ALTR_ROLE or ALTR_SERVICE_ROLE granted to it depending if you connected to ALTR using Snowflake Partner Connect or created your own ALTR Service User
+* GRANT ROLE <PC_ALTR_ROLE | ALTR_SERVICE_ROLE> TO USER <SF_DB_USERNAME>;
+
+**3. You must add a custom field to your Alation environment for this application to work successfully**
 01. Click the settings gear in the top right of Alation
 02. Under the *Catalog Admin* section, click *Customize Catalog*
 03. Under the *Custom Fields* tab, add a *Multi-Select Pickers*
@@ -86,8 +90,8 @@ Integration Flowchart:
 05. Save the custom field by clicking the green check mark
 06. Click *Custom Templates* (next to the *Custom Fields* tab)
 07. Under the *Data Object Templates* section, click *Column*
-08. Click *Insert...* -> *Grouping of Custom Fields* -> label the grouping as 'ALTR'
-09. Under the *ALTR* grouping add the 'Policy Tags' custom field
+08. Click *Insert...* -> *Custom Field*
+09. Select *Policy Tags*
 10. Save the template
   
   
