@@ -17,7 +17,7 @@ let main = async () => {
 		console.log('Permissions Passed');
 		try {
 			// Gets custom field in Alation named, 'Policy Tags' 
-			let alationCustomFields = await alation.getMultipleCustomFields(process.env.ALATION_DOMAIN, process.env.ALATION_API_ACCESS_TOKEN, 'MULTI_PICKER', 'Policy Tags');
+			let alationCustomFields = await alation.getMultipleCustomFields(process.env.ALATION_DOMAIN, process.env.ALATION_API_ACCESS_TOKEN, 'MULTI_PICKER', 'ALTR Policy Tags');
 			if (alationCustomFields.length == 0) throw new Error('\n Custom Field (MULTI PICKER) "Policy Tags" is missing in your Alation environment. \n Please follow the Readme "Before using this tool" section.');
 
 			let alationCustomFieldId = alationCustomFields[0].id;
