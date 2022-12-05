@@ -1,6 +1,3 @@
-const alation = require('./api/alationApi.js');
-const altr = require('./api/altrApi');
-
 /**
  * Filters out Alation databases to only include specified type
  * @param {Array} alationDbs Alation databases
