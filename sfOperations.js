@@ -41,9 +41,55 @@ let updateTagValue = async (connectionPool, database, schema, tagValue) => {
 											}
 										}
 									});
+
 								}
 							}
 						});
+					}
+				}
+			});
+		});
+		return;
+	} catch (error) {
+		throw error;
+	}
+};
+
+/**
+ * Applies tag values to column in Snowflake
+ * @param {*} connectionPool The connection pool made using snowflake-sdk
+ * @param {*} database The database of the column
+ * @param {*} schema The schema of the column
+ * @param {*} table The table of the column
+ * @param {*} column The column
+ * @param {*} tagValue The "Policy Tag"
+ * @returns Promise
+ */
+let applyToColumn = async (connectionPool, database, schema, table, column, tagValue) => {
+	try {
+		connectionPool.use(async (clientConnection) => {
+			await clientConnection.execute({
+				sqlText: `use ${database}.${schema}`,
+				complete: async (error, stmt) => {
+					if (error) {
+						console.log(`Unable to execute statement. ${error}`);
+						throw error;
+					} else {
+						console.log(`Statement successfully executed: ${stmt.getSqlText()}`);
+
+
+						await clientConnection.execute({
+							sqlText: `alter table ${table} modify column ${column} set tag alation_tag = '${tagValue}'`,
+							complete: (error, stmt) => {
+								if (error) {
+									console.log(`Unable to execute statement. ${error}`);
+									throw error;
+								} else {
+									console.log(`Statement successfully executed: ${stmt.getSqlText()}`);
+								}
+							}
+						});
+
 					}
 				}
 			});
@@ -54,6 +100,7 @@ let updateTagValue = async (connectionPool, database, schema, tagValue) => {
 		throw error;
 	}
 };
+
 
 /**
  * Applies tag values to column in Snowflake
@@ -106,6 +153,7 @@ let applyToColumn = async (connectionPool, database, schema, table, column, tagV
  * @param {String} password The password to the Snowflake user
  * @param {Array} alationColumns The Alation columns with "Policy Tags"
  */
+
 let applyPolicyTags = async (account, username, password, role, alationColumns, customFieldId) => {
 	try {
 		const connectionPool = snowflake.createPool(

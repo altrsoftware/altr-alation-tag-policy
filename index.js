@@ -17,7 +17,9 @@ let main = async () => {
 		console.log('Permissions Passed');
 		try {
 			// Gets custom field in Alation named, 'Policy Tags' 
+
 			let alationCustomFields = await alation.getMultipleCustomFields(process.env.ALATION_DOMAIN, process.env.ALATION_API_ACCESS_TOKEN, 'MULTI_PICKER', 'ALTR Policy Tags');
+      
 			if (alationCustomFields.length == 0) throw new Error('\n Custom Field (MULTI PICKER) "Policy Tags" is missing in your Alation environment. \n Please follow the Readme "Before using this tool" section.');
 
 			let alationCustomFieldId = alationCustomFields[0].id;
@@ -40,6 +42,7 @@ let main = async () => {
 			let alationColumns = await alation.getColumns(process.env.ALATION_DOMAIN, process.env.ALATION_API_ACCESS_TOKEN, alationCustomFieldId);
 			if (alationColumns.length == 0) throw new Error('\n No columns were found that contain "Policy Tags" values.');
 			console.log('\nALATION COLUMNS: ' + alationColumns.length);
+
 			console.dir(alationColumns, { depth: null });
 
 			// Updates corresponding Snowflake columns with 'Policy Tags'
@@ -49,6 +52,7 @@ let main = async () => {
 			let altrDbs = await altr.getDatabases(process.env.ALTR_DOMAIN, ALTR_AUTH, 'snowflake_external_functions');
 			console.log('\nALTR DATABASES: ' + altrDbs.databases.length);
 			console.dir(altrDbs.databases, { depth: null });
+
 
 			// Creates a list of databases to be added to ALTR and a list of databases that are already in ALTR
 			let newAndOldDbs = utils.returnNewAndOldDbs(alationColumns, altrDbs.databases);
@@ -82,6 +86,7 @@ let main = async () => {
 			let governColumns = utils.returnNewGovernColumns(alationColumns, altrDbs.databases);
 			console.log('\nALTR GOVERN COLUMNS: ' + governColumns.length);
 			console.dir(governColumns, { depth: null });
+
 
 			// Adds columns to ALTR from the list of 'govern' columns
 			for (const column of governColumns) {

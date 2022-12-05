@@ -8,6 +8,7 @@
 
 The ALTR + Alation Tag Policy integration is a tool to pass policy tags in Alation to Snowflake and ALTR.
 
+
 The tool grabs tags of each column from a custom field in Alation, applies those tag values to the corresponding column in Snowflake, imports Snowflake Object Tags into ALTR and adds said columns to ALTR to be governed.
 
 This tool is plumbing between to available API's..
@@ -21,18 +22,21 @@ and Snowflake.
 ## How it works
 
 The tool:
+
 01. gets Snowflake databases in Alation
 02. gets Alation columns that have 'ALTR Policy Tags' applied
 03. applies tag values to corresponding Snowflake columns
 04. gets databases in ALTR
 05. checks for corresponding Alation databases
 06. adds databases to ALTR if they have tagged columns in Alation and are currently not in ALTR
+
 07. adds tagged columns to ALTR to be governed
 08. updates existing databases in ALTR to import Snowflake Object Tags
 
 ## Why use it
 
 <a  href="https://www.altr.com/">ALTR</a> partnered with <a  href="https://www.alation.com/">Alation</a> to fill a gap between data cataloging and data governance. 
+
 
 With this powerful tool you can apply tags to a columns in Alation and automatically have those tags applied to the corresponding Snowflake columns. If ALTR is already applying policy on those tags, the new columns will automatically have the same policies applied via ALTR. If not, you can easily create a tag based policy in ALTR on that new tag.
 
@@ -50,9 +54,11 @@ Integration Flowchart:
 	
 	$ cd altr-alation-tag-policy
 
+
 **Install npm packages**
 
     $ npm install
+
 
 ## Before using the tool  
 
@@ -121,6 +127,7 @@ This method will install the necessary packages needed to run the application fo
 
 	$ node index.js
 
+
 ## Dependencies
 
 This application was built using the following node packages and their respected version:
@@ -142,6 +149,7 @@ This application was built using the following node packages and their respected
 * [tough-cookie](https://www.npmjs.com/package/tough-cookie/v/4.1.2) : 4.1.2
 
 * [yargs](https://www.npmjs.com/package/yargs/v/17.6.2) : 17.6.2
+
   
 
 ## Support
