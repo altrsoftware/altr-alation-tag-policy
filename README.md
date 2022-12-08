@@ -1,10 +1,13 @@
 <a  href="https://altr.com">
-    <img  src="./imgs/altr-logo.jpg"  alt="ALTR log"  title="ALTR"  align="right"  height="42">
+
+  <img  src="./imgs/altr-logo.jpg"  alt="ALTR log"  title="ALTR"  align="right"  height="42">
+
 </a>
 
-# ALTR + Alation Policy Tags Integration
+# ALTR + Alation Tag Policy Integration
 
-The ALTR + Alation Policy Tags Integration is a tool to pass column tags in Alation to Snowflake and ALTR.
+The ALTR + Alation Tag Policy integration is a tool to pass policy tags in Alation to Snowflake and ALTR.
+
 
 The tool grabs tags of each column from a custom field in Alation, applies those tag values to the corresponding column in Snowflake, imports Snowflake Object Tags into ALTR and adds said columns to ALTR to be governed.
 
@@ -19,12 +22,14 @@ and Snowflake.
 ## How it works
 
 The tool:
-01. gets snowflake databases in Alation
-02. gets columns that have custom field, 'Policy Tags', values 
+
+01. gets Snowflake databases in Alation
+02. gets Alation columns that have 'ALTR Policy Tags' applied
 03. applies tag values to corresponding Snowflake columns
 04. gets databases in ALTR
 05. checks for corresponding Alation databases
-06. if there is a database in Alation (that has tagged columns) and not in ALTR it adds said database to ALTR
+06. adds databases to ALTR if they have tagged columns in Alation and are currently not in ALTR
+
 07. adds tagged columns to ALTR to be governed
 08. updates existing databases in ALTR to import Snowflake Object Tags
 
@@ -32,7 +37,8 @@ The tool:
 
 <a  href="https://www.altr.com/">ALTR</a> partnered with <a  href="https://www.alation.com/">Alation</a> to fill a gap between data cataloging and data governance. 
 
-With this powerful tool you can apply tags to a columns in Alation and automatically have those tags applied to the corresponding Snowflake columns. If ALTR is already applying policy on those tags, the new columns will automatically have the same policies applied. If not, you can easily create a tag based policy in ALTR on that new tag.
+
+With this powerful tool you can apply tags to a columns in Alation and automatically have those tags applied to the corresponding Snowflake columns. If ALTR is already applying policy on those tags, the new columns will automatically have the same policies applied via ALTR. If not, you can easily create a tag based policy in ALTR on that new tag.
 
 ## Visuals
 
@@ -48,6 +54,12 @@ Integration Flowchart:
 	
 	$ cd altr-alation-tag-policy
 
+
+**Install npm packages**
+
+    $ npm install
+
+
 ## Before using the tool  
 
 **1. Fill out the .env file environment variables**
@@ -55,42 +67,46 @@ Integration Flowchart:
 	// ALATION
 	ALATION_API_ACCESS_TOKEN = "Your Alation API Access Token"
 	ALATION_DOMAIN = "Your Alation domain (example-prod.alationcatalog.com)"
-	ALATION_EMAIL = "The email used to sign in and create the Access Token"
+	ALATION_EMAIL = "The email used to sign in and create the API Access Token"
 	
 	// SNOWFLAKE
 	SF_ACCOUNT = "Snowflake account identifier (exampleorg.us-east-1)"
-	SF_DB_USERNAME = "Your ALTR service user username (PC_ALTR_USER or ALTR_SERVICE_USER)"
-	SF_DB_PASSWORD = "Your ALTR service user password"
+	SF_DB_USERNAME = "Your Snowflake username that has admin rights AND must have ALTR service role granted (PC_ALTR_ROLE or ALTR_SERVICE_ROLE)"
+	SF_DB_PASSWORD = "Your Snowflake password"
 
 	SF_HOSTNAME = "The hostname of your Snowflake instance (example.us-west-3.snowflakecomputing.com)"
-	SF_WAREHOUSE = ""
-	SF_ROLE = "The role your ALTR service user falls under (PC_ALTR_ROLE or ALTR_SERVICE_ROLE)"
+	SF_WAREHOUSE = "Default warehouse your ALTR service role uses"
+	SF_ROLE = "If you connected to ALTR through Snowflake Partner Connect (PC_ALTR_ROLE) | If you created a ALTR service user (ALTR_SERVICE_ROLE)"
 	
-	//ALTR CALL SPECIFICS
+	//ALTR
 	ALTR_DOMAIN = "Your ALTR domain (altrnet.live.altr.com)"
-	ALTR_KEY_NAME = "Your ALTR Managment API key name"
-	ALTR_KEY_PASSWORD = "The password to your key"
+	ALTR_KEY_NAME = "Your ALTR Management API key name"
+	ALTR_KEY_PASSWORD = "Your ALTR Management API key password"
 
-**2. You must add a custom field to your Alation environment for this application to work successfully**
-01. Click the settings gear in the top right of Alation
-02. Under the *Catalog Admin* section, click *Customize Catalog*
-03. Under the *Custom Fields* tab, add a *Multi-Select Pickers*
-    - *Name (plural)*: Policy Tags
-    - *Name (singular)*: Policy Tag
-    - *Tooltip Text*: Policy Tags set in Alation
+**2. Grant Role to Snowflake User**
+	
+	GRANT ROLE <PC_ALTR_ROLE | ALTR_SERVICE_ROLE> TO USER <SF_DB_USERNAME>; 
 
-04. Click *+ Add Option* and add a list of tags you would like to tag columns as (examples below)
-    - PCI
-    - PII
-    - PHI
-05. Save the custom field by clicking the green check mark
-06. Click *Custom Templates* (next to the *Custom Fields* tab)
-07. Under the *Data Object Templates* section, click *Column*
-08. Click *Insert...* -> *Grouping of Custom Fields* -> label the grouping as 'ALTR'
-09. Under the *ALTR* grouping add the 'Policy Tags' custom field
-10. Save the template
-  
-  
+* The Snowflake user (SF_DB_USERNAME) you put in .env variables file must have the role of PC_ALTR_ROLE or ALTR_SERVICE_ROLE granted to it depending if you connected to ALTR using Snowflake Partner Connect or created your own ALTR Service User.
+
+
+**3. You must add a custom field to your Alation environment for this application to work successfully**
+
+	$ node createCustomField.js --domain=<Alation Domain> --account=<Alation Login Email> --password=<Alation Login Password>
+
+01. Click the *Settings* icon at the top right of your Alation environment
+
+02. In the *Catalog Admin* section, click *Customize Catalog*
+
+03. Click the *Custom Templates* tab
+
+04. Under the *Data Object Templates* section, click *Column*
+
+05. On the right side of the template, click *Insert* -> *Custom Field* -> *ALTR Policy Tags*
+
+06. At the top of the template, click *Save*
+
+> Note: You can add more / any tags by going to *Customize Catalog* and editing options in *ALTR Policy Tags* custom field
 
 ## How To Use
 
@@ -101,41 +117,39 @@ Integration Flowchart:
 
 This method will install the necessary packages needed to run the application for you.
 
-    $ docker build -t altr/alation-classification-integration .
-    
-    $ docker run -d altr/alation-classification-integration
+	$ docker build -t altr/altr-alation-tag-policy .
+	
+	$ docker run -d altr/altr-alation-tag-policy
 
 **Method 2: Manually**
 
-    $ npm install
-    
-    $ node index.js
+	$ npm install
+
+	$ node index.js
+
 
 ## Dependencies
 
 This application was built using the following node packages and their respected version:
 
-* [node](https://nodejs.org/download/release/v16.0.0/) : 0.27.2
-
-  
-
-* [dotenv](https://www.npmjs.com/package/dotenv/v/16.0.3) : 16.0.3
-
-  
-
 * [axios](https://www.npmjs.com/package/axios/v/0.27.2) : 0.27.2
 
-  
-
-* [snowflake-sdk](https://www.npmjs.com/package/snowflake-sdk/v/1.6.14) : 1.6.14
-
-  
+* [axios-cookiejar-support](https://www.npmjs.com/package/axios-cookiejar-support/v/4.0.3) : 4.0.3
 
 * [axios-mock-adapter](https://www.npmjs.com/package/axios-mock-adapter/v/1.21.2) : 1.21.2
 
-  
+* [dotenv](https://www.npmjs.com/package/dotenv/v/16.0.3) : 16.0.3
 
 * [jest](https://www.npmjs.com/package/jest/v/29.2.2) : 29.2.2
+  
+* [node](https://nodejs.org/download/release/v16.0.0/) : 0.27.2
+
+* [snowflake-sdk](https://www.npmjs.com/package/snowflake-sdk/v/1.6.14) : 1.6.14
+
+* [tough-cookie](https://www.npmjs.com/package/tough-cookie/v/4.1.2) : 4.1.2
+
+* [yargs](https://www.npmjs.com/package/yargs/v/17.6.2) : 17.6.2
+
   
 
 ## Support

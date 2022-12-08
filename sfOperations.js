@@ -10,6 +10,7 @@ const snowflake = require('snowflake-sdk');
  */
 let updateTagValue = async (connectionPool, database, schema, tagValue) => {
 	try {
+
 		connectionPool.use(async (clientConnection) => {
 			await clientConnection.execute({
 				sqlText: `use ${database}.${schema}`,
@@ -28,7 +29,7 @@ let updateTagValue = async (connectionPool, database, schema, tagValue) => {
 									throw error;
 								} else {
 									console.log(`Statement successfully executed: ${stmt.getSqlText()}`);
-
+									await new Promise(r => setTimeout(r, 3000));
 									await clientConnection.execute({
 										sqlText: 'alter tag alation_tag add allowed_values ' + `'${tagValue}'`,
 										complete: async (error, stmt) => {
@@ -66,6 +67,7 @@ let updateTagValue = async (connectionPool, database, schema, tagValue) => {
  */
 let applyToColumn = async (connectionPool, database, schema, table, column, tagValue) => {
 	try {
+
 		connectionPool.use(async (clientConnection) => {
 			await clientConnection.execute({
 				sqlText: `use ${database}.${schema}`,
@@ -75,11 +77,9 @@ let applyToColumn = async (connectionPool, database, schema, table, column, tagV
 						throw error;
 					} else {
 						console.log(`Statement successfully executed: ${stmt.getSqlText()}`);
-
-
 						await clientConnection.execute({
 							sqlText: `alter table ${table} modify column ${column} set tag alation_tag = '${tagValue}'`,
-							complete: (error, stmt) => {
+							complete: async (error, stmt) => {
 								if (error) {
 									console.log(`Unable to execute statement. ${error}`);
 									throw error;
@@ -88,17 +88,16 @@ let applyToColumn = async (connectionPool, database, schema, table, column, tagV
 								}
 							}
 						});
-
 					}
 				}
 			});
 		});
+
 		return;
 	} catch (error) {
 		throw error;
 	}
 };
-
 
 /**
  * Loops through Alation columns adds 'Policy Tags' to Snowflake Object Tag named, 'ALATION_TAG', and applies tag values to column
@@ -107,13 +106,15 @@ let applyToColumn = async (connectionPool, database, schema, table, column, tagV
  * @param {String} password The password to the Snowflake user
  * @param {Array} alationColumns The Alation columns with "Policy Tags"
  */
-let applyPolicyTags = async (account, username, password, alationColumns, customFieldId) => {
+
+let applyPolicyTags = async (account, username, password, role, alationColumns, customFieldId) => {
 	try {
 		const connectionPool = snowflake.createPool(
 			{
 				account: account,
 				username: username,
-				password: password
+				password: password,
+				role: role,
 			},
 			{
 				max: 10,
@@ -126,6 +127,7 @@ let applyPolicyTags = async (account, username, password, alationColumns, custom
 				const customField = column.custom_fields.find(customField => customField.field_id === customFieldId);
 				for (const tag of customField.value) {
 					await updateTagValue(connectionPool, column.key.split('.')[1], column.key.split('.')[2], tag);
+					await new Promise(r => setTimeout(r, 5000));
 					await applyToColumn(connectionPool, column.key.split('.')[1], column.key.split('.')[2], column.key.split('.')[3], column.key.split('.')[4], tag);
 				}
 			}

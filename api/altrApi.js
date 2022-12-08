@@ -86,7 +86,7 @@ exports.getColumns = getColumns;
  * @param {String} warehouseName The warehouse that was granted to the ALTR service user
  * @returns JS Object
  */
-let addSnowflakeDbToAltr = async (altrDomain, basicAuth, dbName, dbPassword, hostname, dbUsername, snowflakeRole, warehouseName) => {
+let addSnowflakeDb = async (altrDomain, basicAuth, dbName, dbPassword, hostname, dbUsername, snowflakeRole, warehouseName) => {
 	let options = {
 		method: 'POST',
 		url: encodeURI(`https://${altrDomain}/api/databases/`),
@@ -115,7 +115,7 @@ let addSnowflakeDbToAltr = async (altrDomain, basicAuth, dbName, dbPassword, hos
 	try {
 		let response = await axios.request(options);
 		console.log('Added ALTR database: ' + dbName);
-		return response.data;
+		return response.data.data;
 	} catch (error) {
 		console.error('POST add database to altr error');
 		if (error.response) {
@@ -125,41 +125,66 @@ let addSnowflakeDbToAltr = async (altrDomain, basicAuth, dbName, dbPassword, hos
 		throw error;
 	}
 };
-exports.addSnowflakeDbToAltr = addSnowflakeDbToAltr;
+exports.addSnowflakeDb = addSnowflakeDb;
 
 /**
- * Updates Snowflake database in ALTR
+ * Adds a Snowflake database to ALTR using partner connect account
  * @param {String} altrDomain The domain of your ALTR organization
- * @param {String} basicAuth Base64 encoded string using your ALTR API key and password 
- * @param {String} dbName The name of the database on the host you are trying to connect 
- * @param {String} dbPassword The password of the database on the host you're trying to connect 
- * @param {String} hostname The host where the database you're trying to connect is located 
- * @param {String} dbUsername The username of the ALTR service user 
- * @param {String} snowflakeRole The role the ALTR service user is under 
- * @param {String} warehouseName The warehouse that was granted to the ALTR service user
- * @param {Number} dbId The database ID that correlates to the data being govern or protected belongs to
+ * @param {String} basicAuth Base64 encoded string using your ALTR API key and password
+ * @param {String} dbName The name of the database on the host you are trying to connect
+ * @param {Number} accountId The id of the partner connect snowflake account
  * @returns JS Object
  */
-let updateSnowflakeDbInAltr = async (altrDomain, basicAuth, dbName, dbPassword, hostname, dbUsername, snowflakeRole, warehouseName, dbId) => {
+let addSnowflakeDbPC = async (altrDomain, basicAuth, dbName, accountId) => {
 	let options = {
-		method: 'PATCH',
-		url: encodeURI(`https://${altrDomain}/api/databases/${encodeURIComponent(dbId)}`),
+		method: 'POST',
+		url: encodeURI(`https://${altrDomain}/api/databases/snowflake/connect`),
 		headers: {
 			'Authorization': 'Basic ' + basicAuth,
 			'Content-Type': 'application/json'
 		},
 		data: {
 			friendlyDatabaseName: dbName.toUpperCase(),
-			databasePort: 443,
-			maxNumberOfConnections: '5',
-			maxNumberOfBatches: '15',
 			databaseName: dbName,
-			databasePassword: dbPassword,
-			databaseType: 'snowflake_external_functions',
-			hostname: hostname,
-			databaseUsername: dbUsername,
-			snowflakeRole: snowflakeRole,
-			warehouseName: warehouseName,
+			accountId: accountId,
+			shouldClassify: false,
+			dataUsageHistory: false,
+			classificationType: '3',
+		}
+	};
+
+	try {
+		let response = await axios.request(options);
+		console.log('Added ALTR database (Partner Connect): ' + dbName);
+		return response.data.data;
+	} catch (error) {
+		console.error('POST add database to altr error (Partner Connect)');
+		if (error.response) {
+			console.error(error.response.data);
+			console.error(error.response.status);
+		}
+		throw error;
+	}
+}
+exports.addSnowflakeDbPC = addSnowflakeDbPC;
+
+/**
+ * Updates Snowflake database in ALTR
+ * @param {String} altrDomain The domain of your ALTR organization
+ * @param {String} basicAuth Base64 encoded string using your ALTR API key and password 
+ * @param {String} dbName The name of the database on the host you are trying to connect 
+ * @param {Number} dbId The database ID that correlates to the data being govern or protected belongs to
+ * @returns JS Object
+ */
+let updateSnowflakeDbInAltr = async (altrDomain, basicAuth, dbName, dbId) => {
+	let options = {
+		method: 'PATCH',
+		url: encodeURI(`https://${altrDomain}/api/databases/${dbId}`),
+		headers: {
+			'Authorization': 'Basic ' + basicAuth,
+			'Content-Type': 'application/json'
+		},
+		data: {
 			shouldClassify: true,
 			dataUsageHistory: true,
 			classificationType: '3',
@@ -225,16 +250,15 @@ let addColumnToAltr = async (altrDomain, basicAuth, dbId, tableName, columnName)
 exports.addColumnToAltr = addColumnToAltr;
 
 /**
- * Gets the status of classification being run on a ALTR database
- * @param {String} altrDomain The domain of your ALTR organization
- * @param {String} basicAuth Base64 encoded string using your ALTR API key and password 
- * @param {Number} dbId The ID of the ALTR database
- * @returns JS Object
+ * Gets snowflake account information
+ * @param {String} altrDomain 
+ * @param {String} basicAuth 
+ * @returns JS Array of Objects
  */
-let getClassificationStatus = async (altrDomain, basicAuth, dbId) => {
-	let options = {
+let getSnowflakeAccounts = async (altrDomain, basicAuth) => {
+	const options = {
 		method: 'GET',
-		url: encodeURI(`https://${altrDomain}/api/classification/status/${dbId}`),
+		url: encodeURI(`https://${altrDomain}/api/databases/snowflake/accounts`),
 		headers: {
 			'Authorization': 'Basic ' + basicAuth,
 			'Content-Type': 'application/json'
@@ -243,17 +267,17 @@ let getClassificationStatus = async (altrDomain, basicAuth, dbId) => {
 
 	try {
 		let response = await axios.request(options);
-		return response.data;
+		return response.data.data;
 	} catch (error) {
+		console.error('GET altr Snowflake accounts error');
 		if (error.response) {
-			console.error('GET altr db classification status error');
 			console.error(error.response.data);
 			console.error(error.response.status);
 		}
 		throw error;
 	}
-};
-exports.getClassificationStatus = getClassificationStatus;
+}
+exports.getSnowflakeAccounts = getSnowflakeAccounts;
 
 /**
  * Gets list of administrators in ALTR organization
