@@ -12,8 +12,9 @@ let main = async () => {
 
 	let alationPermissions = await alation.getUsers(process.env.ALATION_DOMAIN, process.env.ALATION_API_ACCESS_TOKEN, process.env.ALATION_EMAIL);
 	let altrPermissions = await altr.getAdministrators(process.env.ALTR_DOMAIN, ALTR_AUTH);
+	let snowflakePermissions = await snowflake.checkConnection(process.env.SF_ACCOUNT, process.env.SF_DB_USERNAME, process.env.SF_DB_PASSWORD, process.env.SF_ROLE);
 
-	if (alationPermissions && altrPermissions) {
+	if (alationPermissions && altrPermissions && snowflakePermissions) {
 		console.log('Permissions Passed');
 		try {
 			// Gets custom field in Alation named, 'Policy Tags' 
@@ -39,6 +40,7 @@ let main = async () => {
 
 			// Gets all columns in Alation that have 'Policy Tags' set
 			let alationColumns = await alation.getColumns(process.env.ALATION_DOMAIN, process.env.ALATION_API_ACCESS_TOKEN, alationCustomFieldId);
+			alationColumns = utils.filterAlationColumns(alationColumns, alationDbs, process.env.SF_HOSTNAME);
 			if (alationColumns.length == 0) throw new Error('\n No columns were found that contain "Policy Tags" values.');
 			console.log('\nALATION COLUMNS: ' + alationColumns.length);
 

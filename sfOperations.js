@@ -140,4 +140,36 @@ let applyPolicyTags = async (account, username, password, role, alationColumns, 
 };
 exports.applyPolicyTags = applyPolicyTags;
 
+/**
+ * Checks if environment variables listed in .env file can make a connection to specified Snowflake host
+ * @param {String} account 
+ * @param {String} username 
+ * @param {String} password 
+ * @param {String} role 
+ * @returns true | false
+ */
+let checkConnection = async (account, username, password, role) => {
+	let connection = snowflake.createConnection({
+		account: account,
+		username: username,
+		password: password,
+		role: role
+	});
+
+	return new Promise((resolve, reject) => {
+		connection.connect(
+			function (err, conn) {
+				if (err) {
+					console.log('Unable to connect to Snowflake.');
+					resolve(false);
+				}
+				else {
+					resolve(true);
+				}
+			}
+		);
+	});
+
+};
+exports.checkConnection = checkConnection;
 
