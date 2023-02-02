@@ -1,5 +1,13 @@
 const Snowflake = require('snowflake-promise').Snowflake;
 
+/**
+ * Makes a connection to Snowflake to check if credentials are correct
+ * @param {String} account account The Snowflake account (example: sa32fjd.us-east-1)
+ * @param {String} username username The Snowflake username (ALTR service user)
+ * @param {String} password password The password to the Snowflake user
+ * @param {String} role snowflake role (ALTR Service Role or ACCOUNTADMIN)
+ * @returns true if connection was successful | false if connection failed
+ */
 let checkConnection = async (account, username, password, role) => {
 	const snowflake = new Snowflake({
 		account: account,
@@ -20,13 +28,13 @@ let checkConnection = async (account, username, password, role) => {
 exports.checkConnection = checkConnection;
 
 /**
- * 
- * @param {String} account 
- * @param {String} username 
- * @param {String} password 
- * @param {String} role 
- * @param {Array} alationColumns 
- * @param {Number} customFieldId 
+ * Loops through Alation columns adds 'Policy Tags' to Snowflake Object Tag named, 'ALATION_TAG', and applies tag values to column
+ * @param {String} account account The Snowflake account (example: sa32fjd.us-east-1)
+ * @param {String} username username The Snowflake username (ALTR service user)
+ * @param {String} password password The password to the Snowflake user
+ * @param {String} role snowflake role (ALTR Service Role or ACCOUNTADMIN)
+ * @param {Array} alationColumns alationColumns
+ * @param {Number} customFieldId custom field id
  * @returns Promise
  */
 let applyPolicyTags = async (account, username, password, role, alationColumns, customFieldId) => {
@@ -78,12 +86,12 @@ let applyPolicyTags = async (account, username, password, role, alationColumns, 
 exports.applyPolicyTags = applyPolicyTags;
 
 /**
- * 
- * @param {*} snowflake 
- * @param {*} database 
- * @param {*} schema 
- * @param {*} tagValue 
- * @returns 
+ * Adds tag values to 'Alation Tag' per database in Snowflake
+ * @param {Snowflake Connection Object} snowflake snowflake connection object
+ * @param {String} database database
+ * @param {String} schema schema
+ * @param {String} tagValue tag value
+ * @returns Promise
  */
 let updateTagValue = async (snowflake, database, schema, tagValue) => {
 	try {
@@ -98,14 +106,14 @@ let updateTagValue = async (snowflake, database, schema, tagValue) => {
 exports.updateTagValue = updateTagValue;
 
 /**
- * 
- * @param {*} snowflake 
- * @param {*} database 
- * @param {*} schema 
- * @param {*} table 
- * @param {*} column 
- * @param {*} tagValue 
- * @returns 
+ * Applies tag value to column
+ * @param {Snowflake Connection Object} snowflake snowflake connection object
+ * @param {String} database database
+ * @param {String} schema schema
+ * @param {String} table table
+ * @param {String} column column
+ * @param {String} tagValue tag value
+ * @returns Promise
  */
 let applyToColumn = async (snowflake, database, schema, table, column, tagValue) => {
 	try {
