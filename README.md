@@ -11,7 +11,7 @@ The ALTR + Alation Tag Policy integration is a tool to pass policy tags in Alati
 
 The tool grabs tags of each column from a custom field in Alation, applies those tag values to the corresponding column in Snowflake, imports Snowflake Object Tags into ALTR and adds said columns to ALTR to be governed.
 
-This tool is plumbing between to available API's..
+This tool is plumbing between two available API's:
 
 * [ALTR Management API](https://altrnet.live.altr.com/api/swagger/)
 
@@ -38,7 +38,7 @@ The tool:
 <a  href="https://www.altr.com/">ALTR</a> partnered with <a  href="https://www.alation.com/">Alation</a> to fill a gap between data cataloging and data governance. 
 
 
-With this powerful tool you can apply tags to a columns in Alation and automatically have those tags applied to the corresponding Snowflake columns. If ALTR is already applying policy on those tags, the new columns will automatically have the same policies applied via ALTR. If not, you can easily create a tag based policy in ALTR on that new tag.
+With this powerful tool, you can apply tags to columns in Alation and automatically have those tags applied to the corresponding Snowflake columns. If ALTR is already applying policy on those tags, the new columns will automatically have the same policies applied via ALTR. If not, you can easily create a tag-based policy in ALTR on that new tag.
 
 ## Visuals
 
@@ -144,7 +144,7 @@ This application was built using the following node packages and their respected
   
 * [node](https://nodejs.org/download/release/v16.0.0/) : 0.27.2
 
-* [snowflake-sdk](https://www.npmjs.com/package/snowflake-sdk/v/1.6.14) : 1.6.14
+* [snowflake-promise](https://www.npmjs.com/package/snowflake-promise/v/4.5.0) : 4.5.0
 
 * [tough-cookie](https://www.npmjs.com/package/tough-cookie/v/4.1.2) : 4.1.2
 

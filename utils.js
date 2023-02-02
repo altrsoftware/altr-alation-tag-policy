@@ -10,6 +10,21 @@ let filterAlationDbs = (alationDbs, dbType) => {
 exports.filterAlationDbs = filterAlationDbs;
 
 /**
+ * Filters our Alation columns that are part of a database in a snowflake host that is specified in the environment variables
+ * @param {Array} alationColumns 
+ * @param {Array}} alationDbs 
+ * @param {String} hostname 
+ * @returns 
+ */
+let filterAlationColumns = (alationColumns, alationDbs, hostname) => {
+	return alationColumns.filter(column => {
+		let database = alationDbs.find(database => column.ds_id == database.id);
+		return database.host.toUpperCase() == hostname.toUpperCase();
+	});
+}
+exports.filterAlationColumns = filterAlationColumns;
+
+/**
  * Sorts which databases are already in ALTR and which need to be added to ALTR
  * @param {Array} alationColumns Columns in Alation
  * @param {Array} altrDbs ALTR databases
