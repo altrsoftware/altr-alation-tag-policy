@@ -133,7 +133,7 @@ let addSnowflakeDbPC = async (altrDomain, basicAuth, dbName, accountId) => {
 		}
 		throw error;
 	}
-}
+};
 exports.addSnowflakeDbPC = addSnowflakeDbPC;
 
 /**
@@ -219,8 +219,8 @@ exports.addColumnToAltr = addColumnToAltr;
 
 /**
  * Gets snowflake account information
- * @param {String} altrDomain 
- * @param {String} basicAuth 
+ * @param {String} altrDomain The domain of your ALTR organization
+ * @param {String} basicAuth Base64 encoded string using your ALTR API key and password
  * @returns JS Array of Objects
  */
 let getSnowflakeAccounts = async (altrDomain, basicAuth) => {
@@ -244,7 +244,7 @@ let getSnowflakeAccounts = async (altrDomain, basicAuth) => {
 		}
 		throw error;
 	}
-}
+};
 exports.getSnowflakeAccounts = getSnowflakeAccounts;
 
 /**

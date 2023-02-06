@@ -47,7 +47,7 @@ let applyPolicyTags = async (account, username, password, role, alationColumns, 
 
 	try {
 		await snowflake.connect();
-		console.log(`\nSet Snowflake Object Tags: `)
+		console.log(`\nSet Snowflake Object Tags: `);
 
 		let tagArray = [];
 
@@ -128,14 +128,14 @@ let applyToColumn = async (snowflake, database, schema, table, column, tagValue)
 };
 
 /**
- * 
- * @param {*} account 
- * @param {*} username 
- * @param {*} password 
- * @param {*} role 
- * @param {*} alationDbs 
- * @param {*} tagName 
- * @returns 
+ * Gets all columns in Snowflake that are tagged by specified tag name and are in specified databases
+ * @param {String} account account The Snowflake account (example: sa32fjd.us-east-1)
+ * @param {String} username username The Snowflake username (ALTR service user)
+ * @param {String} password password The password to the Snowflake user
+ * @param {String} role snowflake role (ALTR Service Role or ACCOUNTADMIN)
+ * @param {String} alationDbs Alation databases
+ * @param {String} tagName tag name
+ * @returns Array of Snowflake columns
  */
 let getTaggedColumnsFromDatabases = async (account, username, password, role, alationDbs, tagName) => {
 	const snowflake = new Snowflake({
@@ -159,10 +159,10 @@ let getTaggedColumnsFromDatabases = async (account, username, password, role, al
 exports.getTaggedColumnsFromDatabases = getTaggedColumnsFromDatabases;
 
 /**
- * 
- * @param {*} snowflake 
- * @param {*} alationDbs 
- * @returns 
+ * Gets all table names from specified databases
+ * @param {Snowflake Connection Object} snowflake snowflake connection object
+ * @param {Array} alationDbs Alation databases
+ * @returns Array of Snowflake tables
  */
 let getAllTables = async (snowflake, alationDbs) => {
 	let tables = [];
@@ -179,11 +179,11 @@ let getAllTables = async (snowflake, alationDbs) => {
 };
 
 /**
- * 
- * @param {*} snowflake 
- * @param {*} tables 
- * @param {*} tagName 
- * @returns 
+ * Gets all columns in Snowflake that are tagged by specified tag name and are in specified tables
+ * @param {Snowflake Connection Object} snowflake snowflake connection object
+ * @param {Array} tables Snowflake tables
+ * @param {String} tagName tag name
+ * @returns tagged Snowflake columns
  */
 let getTaggedColumnsFromTables = async (snowflake, tables, tagName) => {
 	let taggedColumns = [];
@@ -205,13 +205,13 @@ let getTaggedColumnsFromTables = async (snowflake, tables, tagName) => {
 };
 
 /**
- * 
- * @param {*} account 
- * @param {*} username 
- * @param {*} password 
- * @param {*} role 
- * @param {*} columns 
- * @returns 
+ * Unset 'ALATION_TAG' in Snowflake for specified columns
+ * @param {String} account account The Snowflake account (example: sa32fjd.us-east-1)
+ * @param {String} username username The Snowflake username (ALTR service user)
+ * @param {String} password password The password to the Snowflake user
+ * @param {String} role snowflake role (ALTR Service Role or ACCOUNTADMIN)
+ * @param {Array} columns Snowflake columns
+ * @returns Promise
  */
 let dropPolicyTags = async (account, username, password, role, columns) => {
 	const snowflake = new Snowflake({
@@ -223,7 +223,7 @@ let dropPolicyTags = async (account, username, password, role, columns) => {
 
 	try {
 		await snowflake.connect();
-		console.log(`\nUnset Snowflake Object Tags: `)
+		console.log(`\nUnset Snowflake Object Tags: `);
 
 		let currentDatabase = '';
 		for (const column of columns) {

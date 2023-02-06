@@ -47,13 +47,13 @@ let main = async () => {
 
 			// Gets all Snowflake columns tagged by 'ALATION_TAG'
 			let taggedSnowflakeColumns = await snowflake.getTaggedColumnsFromDatabases(process.env.SF_ACCOUNT, process.env.SF_DB_USERNAME, process.env.SF_DB_PASSWORD, process.env.SF_ROLE, alationDatabases, 'ALATION_TAG');
-			
+
 			// Gets all snowflake columns that are tagged in Snowflake but not tagged in Alation
 			let nonMatchingSnowflakeColumns = utils.filterTaggedSnowflakeColumns(taggedSnowflakeColumns, alationColumns);
 
 			// Unset tag from Snowflake columns if matching Alation column does not have tag or the same tag value
 			if (nonMatchingSnowflakeColumns.length != 0) await snowflake.dropPolicyTags(process.env.SF_ACCOUNT, process.env.SF_DB_USERNAME, process.env.SF_DB_PASSWORD, process.env.SF_ROLE, nonMatchingSnowflakeColumns);
-		
+
 			// Sets 'ALTR Policy Tags' on Snowflake columns
 			if (alationColumns.length != 0) await snowflake.applyPolicyTags(process.env.SF_ACCOUNT, process.env.SF_DB_USERNAME, process.env.SF_DB_PASSWORD, process.env.SF_ROLE, alationColumns, alationCustomFieldId);
 

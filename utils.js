@@ -66,8 +66,8 @@ exports.getNewAltrDatabases = getNewAltrDatabases;
 
 /**
  * Compares Alation databases (parsed from column information) with ALTR databases and gets updatable ALTR databases
- * @param {Array} alationColumns 
- * @param {Array} altrDbs 
+ * @param {Array} alationColumns Alation columns
+ * @param {Array} altrDbs ALTR databases
  * @returns Array of database names that need to be updated in ALTR (Already exist in ALTR)
  */
 let getUpdatableAltrDatabases = (alationColumns, altrDbs, nonMatchingSnowflakeColumns) => {
@@ -127,10 +127,10 @@ let returnNewGovernColumns = (alationColumns, altrDbs) => {
 exports.returnNewGovernColumns = returnNewGovernColumns;
 
 /**
-  * Filters out Snowflake columns that are tagged and have matching tag in Alation
- * @param {Array} taggedSnowflakeColumns 
- * @param {Array} alationColumns 
- * @returns
+	* Filters out Snowflake columns that are tagged and have matching tag in Alation
+ * @param {Array} taggedSnowflakeColumns Snowflake columns that are tagged
+ * @param {Array} alationColumns Alation columns
+ * @returns Array of Snowflake columns
  */
 let filterTaggedSnowflakeColumns = (taggedSnowflakeColumns, alationColumns) => {
 	return taggedSnowflakeColumns.filter(snowflakeColumn => {
@@ -151,10 +151,10 @@ let filterTaggedSnowflakeColumns = (taggedSnowflakeColumns, alationColumns) => {
 exports.filterTaggedSnowflakeColumns = filterTaggedSnowflakeColumns;
 
 /**
- * 
- * @param {*} updatableDatabases 
- * @param {*} altrDatabases 
- * @returns 
+ * For each updatable database in updatableDatabases, get the matching ALTR databases
+ * @param {Array} updatableDatabases Databases that should be updated
+ * @param {Array} altrDatabases ALTR databases
+ * @returns Array of ALTR databases
  */
 let getAltrDatabaseObjects = (updatableDatabases, altrDatabases) => {
 	let updatableAltrDatabases = [];
@@ -164,5 +164,5 @@ let getAltrDatabaseObjects = (updatableDatabases, altrDatabases) => {
 	}
 
 	return updatableAltrDatabases;
-}
+};
 exports.getAltrDatabaseObjects = getAltrDatabaseObjects;
