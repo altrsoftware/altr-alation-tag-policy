@@ -105,6 +105,8 @@ Integration Flowchart:
 
 > Note: You can add more / any tags by going to *Customize Catalog* and editing options in *ALTR Policy Tags* custom field
 
+**4. Please consider the Snowflake Object Tags named 'ALATION_TAG' created and used by this integration as 'sacred'. If you manually alter/delete these tags in Snowflake it could cause problems when using the integration.**
+
 ## How To Use
 
 > **Warning:** 
