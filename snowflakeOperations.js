@@ -43,10 +43,11 @@ let applyPolicyTags = async (account, username, password, role, alationColumns, 
 		username: username,
 		password: password,
 		role: role
-	}, {logSql: console.log});
+	}, { logSql: console.log });
 
 	try {
 		await snowflake.connect();
+		console.log(`\nSet Snowflake Object Tags: `)
 
 		let tagArray = [];
 
@@ -57,7 +58,7 @@ let applyPolicyTags = async (account, username, password, role, alationColumns, 
 			}
 			const customField = column.custom_fields.find(customField => customField.field_id === customFieldId);
 			for (const tag of customField.value) {
-				tagArray.push({database: column.key.split('.')[1], schema: column.key.split('.')[2], tagValue: tag})
+				tagArray.push({ database: column.key.split('.')[1], schema: column.key.split('.')[2], tagValue: tag });
 			}
 		}
 		tagArray = [...new Set(tagArray.map(JSON.stringify))].map(JSON.parse);
@@ -78,6 +79,7 @@ let applyPolicyTags = async (account, username, password, role, alationColumns, 
 			}
 		}
 
+		await snowflake.destroy();
 		return;
 	} catch (error) {
 		throw (error);
@@ -102,8 +104,8 @@ let updateTagValue = async (snowflake, database, schema, tagValue) => {
 	} catch (error) {
 		throw error;
 	}
-}
-exports.updateTagValue = updateTagValue;
+};
+
 
 /**
  * Applies tag value to column
@@ -123,6 +125,120 @@ let applyToColumn = async (snowflake, database, schema, table, column, tagValue)
 	} catch (error) {
 		throw error;
 	}
-}
-exports.applyToColumn = applyToColumn;
+};
 
+/**
+ * 
+ * @param {*} account 
+ * @param {*} username 
+ * @param {*} password 
+ * @param {*} role 
+ * @param {*} alationDbs 
+ * @param {*} tagName 
+ * @returns 
+ */
+let getTaggedColumnsFromDatabases = async (account, username, password, role, alationDbs, tagName) => {
+	const snowflake = new Snowflake({
+		account: account,
+		username: username,
+		password: password,
+		role: role
+	}, { logSql: console.log });
+
+	try {
+		await snowflake.connect();
+		let tables = await getAllTables(snowflake, alationDbs);
+		let taggedColumns = await getTaggedColumnsFromTables(snowflake, tables, tagName);
+		await snowflake.destroy();
+
+		return taggedColumns;
+	} catch (error) {
+		throw error;
+	}
+};
+exports.getTaggedColumnsFromDatabases = getTaggedColumnsFromDatabases;
+
+/**
+ * 
+ * @param {*} snowflake 
+ * @param {*} alationDbs 
+ * @returns 
+ */
+let getAllTables = async (snowflake, alationDbs) => {
+	let tables = [];
+	let currentDatabase = '';
+	for (const database of alationDbs) {
+		if (currentDatabase != `${database.dbname}`) {
+			currentDatabase = `${database.dbname}`;
+			await snowflake.execute(`use ${currentDatabase}`);
+		}
+		let response = await snowflake.execute(`show tables`).then(response => response.map(value => value.name));
+		tables.push({ database: database.dbname, tables: response });
+	}
+	return tables;
+};
+
+/**
+ * 
+ * @param {*} snowflake 
+ * @param {*} tables 
+ * @param {*} tagName 
+ * @returns 
+ */
+let getTaggedColumnsFromTables = async (snowflake, tables, tagName) => {
+	let taggedColumns = [];
+	let currentDatabase = '';
+	for (const table of tables) {
+		if (currentDatabase != `${table.database}`) {
+			currentDatabase = `${table.database}`;
+			await snowflake.execute(`use ${currentDatabase}`);
+		}
+		for (const obj of table.tables) {
+			let columns = await snowflake.execute(`select * from table(information_schema.tag_references_all_columns('${obj}', 'table'))`);
+			columns = columns.filter(column => column.TAG_NAME == tagName);
+			columns = columns.map(column => ({ column: `${column.OBJECT_DATABASE}.${column.OBJECT_SCHEMA}.${obj.toUpperCase()}.${column.COLUMN_NAME}`, tagValue: column.TAG_VALUE }));
+			taggedColumns = taggedColumns.concat(columns);
+		}
+	}
+
+	return taggedColumns;
+};
+
+/**
+ * 
+ * @param {*} account 
+ * @param {*} username 
+ * @param {*} password 
+ * @param {*} role 
+ * @param {*} columns 
+ * @returns 
+ */
+let dropPolicyTags = async (account, username, password, role, columns) => {
+	const snowflake = new Snowflake({
+		account: account,
+		username: username,
+		password: password,
+		role: role
+	}, { logSql: console.log });
+
+	try {
+		await snowflake.connect();
+		console.log(`\nUnset Snowflake Object Tags: `)
+
+		let currentDatabase = '';
+		for (const column of columns) {
+			let values = column.column.split('.');
+			if (currentDatabase != `${values[0]}.${values[1]}`) {
+				currentDatabase = `${values[0]}.${values[1]}`;
+				await snowflake.execute(`use ${currentDatabase}`);
+			}
+			await snowflake.execute(`alter table ${values[2]} modify column ${values[3]} unset tag alation_tag`);
+		}
+
+		return;
+	} catch (error) {
+		throw error;
+	}
+
+};
+exports.dropPolicyTags = dropPolicyTags;

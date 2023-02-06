@@ -29,7 +29,7 @@ let getDatabases = async (altrDomain, basicAuth, databaseType) => {
 
 	try {
 		let response = await axios.request(options);
-		return response.data.data;
+		return response.data.data.databases;
 	} catch (error) {
 		console.error('GET altr databases error');
 		if (error.response) {
@@ -41,38 +41,6 @@ let getDatabases = async (altrDomain, basicAuth, databaseType) => {
 
 };
 exports.getDatabases = getDatabases;
-
-
-/**
- * Gets Snowflake databases in ALTR
- * @param {String} altrDomain The domain of your ALTR organization
- * @param {String} basicAuth Base64 encoded string using your ALTR API key and password 
- * @returns JS Array of Objects
- */
-let getColumns = async (altrDomain, basicAuth) => {
-	const options = {
-		method: 'GET',
-		url: encodeURI(`https://${altrDomain}/api/data`),
-		headers: {
-			'Authorization': 'Basic ' + basicAuth,
-			'Content-Type': 'application/json'
-		}
-	};
-
-	try {
-		let response = await axios.request(options);
-		return response.data.data;
-	} catch (error) {
-		console.error('GET altr databases error');
-		if (error.response) {
-			console.error(error.response.data);
-			console.error(error.response.status);
-		}
-		throw error;
-	}
-
-};
-exports.getColumns = getColumns;
 
 /**
  * Adds Snowflake database to ALTR
