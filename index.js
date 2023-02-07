@@ -64,7 +64,7 @@ let main = async () => {
 			if (newAltrDatabases.length != 0) {
 				if (process.env.SF_ROLE.toUpperCase() === 'PC_ALTR_ROLE') {
 					let accounts = await altr.getSnowflakeAccounts(process.env.ALTR_DOMAIN, ALTR_AUTH);
-					let accountId = accounts.accounts.find(account => account.name.toUpperCase().includes(process.env.SF_HOSTNAME.toUpperCase())).id;
+					let accountId = accounts.find(account => account.name.toUpperCase().includes(process.env.SF_HOSTNAME.toUpperCase())).id;
 
 					for (const database of newAltrDatabases) {
 						let response = await altr.addSnowflakeDbPC(process.env.ALTR_DOMAIN, ALTR_AUTH, database, accountId);
@@ -80,17 +80,15 @@ let main = async () => {
 
 			// Refresh ALTR database list
 			altrDatabases = await altr.getDatabases(process.env.ALTR_DOMAIN, ALTR_AUTH, 'snowflake_external_functions');
-			console.log('\nREFRESHED ALTR DATABASES: ' + altrDatabases.length);
-			console.log(altrDatabases.map(value => value.databaseName));
 
 			// Creates a list of columns that ALTR will 'govern' from Alation columns list
-			let governColumns = utils.returnNewGovernColumns(alationColumns, altrDatabases);
+			let governColumns = utils.getNewGovernColumns(alationColumns, altrDatabases);
 			console.log('\nNEW GOVERNED COLUMNS IN ALTR: ' + governColumns.length);
 			console.dir(governColumns.map(value => `${value.databaseId}.${value.tableName}.${value.columnName}`));
 
 			// Adds columns to ALTR from the list of 'govern' columns
 			for (const column of governColumns) {
-				await altr.addColumnToAltr(process.env.ALTR_DOMAIN, ALTR_AUTH, column.databaseId, column.tableName, column.columnName);
+				await altr.addColumn(process.env.ALTR_DOMAIN, ALTR_AUTH, column.databaseId, column.tableName, column.columnName);
 			}
 
 			// Get list of updatable ALTR databases
@@ -99,7 +97,7 @@ let main = async () => {
 
 			// Update databases
 			for (const database of updatableAltrDatabases) {
-				await altr.updateSnowflakeDbInAltr(process.env.ALTR_DOMAIN, ALTR_AUTH, database.databaseName, database.id);
+				await altr.updateSnowflakeDb(process.env.ALTR_DOMAIN, ALTR_AUTH, database.databaseName, database.id);
 			}
 
 		} catch (error) {

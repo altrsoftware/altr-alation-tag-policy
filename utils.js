@@ -109,7 +109,7 @@ exports.getUpdatableAltrDatabases = getUpdatableAltrDatabases;
  * @param {Array} altrDbs ALTR databases
  * @returns JS Array of Objects
  */
-let returnNewGovernColumns = (alationColumns, altrDbs) => {
+let getNewGovernColumns = (alationColumns, altrDbs) => {
 	let governColumns = [];
 
 	for (const column of alationColumns) {
@@ -124,7 +124,7 @@ let returnNewGovernColumns = (alationColumns, altrDbs) => {
 
 	return governColumns;
 };
-exports.returnNewGovernColumns = returnNewGovernColumns;
+exports.getNewGovernColumns = getNewGovernColumns;
 
 /**
 	* Filters out Snowflake columns that are tagged and have matching tag in Alation

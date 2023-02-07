@@ -1,186 +1,458 @@
 const utils = require('../utils.js');
 
-// RETURN NEW OR UPDATE DBS
-describe('TESTING returnNewOrUpdateDbs()', () => {
-	describe('Passing a tagged Alation column that has corresponding ALTR database', () => {
-		it('Shall return an object with an updatable database', () => {
-			const tags = [{
-				tagId: 50,
-				tagName: 'TAG_NAME',
-				tagSubjects: [{
-					columnName: 'EXAMPLE_COLUMN_NAME',
-					columnType: 'EXAMPLE_COLUMN_TYPE',
-					tableName: 'EXAMPLE_DB.EXAMPLE_SCHEMA.EXAMPLE_TABLE'
-				}]
-			}];
-
-			const altrDbsData = [
+describe('TESTING filterAlationDatabaseByType()', () => {
+	describe('Passing an array of Alation databases and dbType of "snowflake"', () => {
+		it('Shall only return databases of type "snowflake"', () => {
+			const alationDbs = [
 				{
-					"id": 0,
-					"clientId": "string",
-					"friendlyDatabaseName": "EXAMPLE_DB",
-					"databaseName": "EXAMPLE_DB",
-					"databaseUsername": "string",
-					"SFCount": 0
+					"dbtype": "snowflake",
+					"is_gone": false,
+					"deleted": false,
+					"dbname": "database1",
+					"host": "example.eu-east-1"
+				},
+				{
+					"dbtype": "dbt",
+					"is_gone": false,
+					"deleted": false,
+					"dbname": "database2",
+					"host": "not.same"
 				}
 			];
 
-			const result = utils.returnNewOrUpdateDbs(tags, altrDbsData);
-			const expected = { newDbs: [], updateDbs: [{ dbName: 'EXAMPLE_DB', dbId: 0 }] };
-			expect(result).toStrictEqual(expected);
-		});
-	});
-
-	describe('Passing a tagged Alation column that does not have a corresponding ALTR database', () => {
-		it('Shall return an object with a new database', () => {
-			const tags = [{
-				tagId: 54,
-				tagName: 'TAG_NAME',
-				tagSubjects: [{
-					columnName: 'EXAMPLE_COLUMN_NAME',
-					columnType: 'EXAMPLE_COLUMN_TYPE',
-					tableName: 'EXAMPLE_DB.EXAMPLE_SCHEMA.EXAMPLE_TABLE'
-				}]
-			}];
-
-			const altrDbsData = [
+			const expected = [
 				{
-					"id": 0,
-					"clientId": "string",
-					"friendlyDatabaseName": "NOT_SAME_EXAMPLE_DB",
-					"databaseName": "NOT_SAME_EXAMPLE_DB",
-					"databaseUsername": "string",
-					"SFCount": 0
+					"dbtype": "snowflake",
+					"is_gone": false,
+					"deleted": false,
+					"dbname": "database1",
+					"host": "example.eu-east-1"
 				}
 			];
 
-
-			const result = utils.returnNewOrUpdateDbs(tags, altrDbsData);
-			const expected = { newDbs: ['EXAMPLE_DB'], updateDbs: [] };
-			expect(result).toStrictEqual(expected);
+			const result = utils.filterAlationDatabasesByType(alationDbs, 'snowflake');
+			expect(result).toEqual(expected);
 		});
 	});
-
-	describe('Passing tagged Alation columns that HAVE and DO NOT have corresponding ALTR databases', () => {
-		it('Shall return an object with a new database and an updatable database', () => {
-			const tags = [{
-				tagId: 54,
-				tagName: 'TAG_NAME',
-				tagSubjects: [{
-					columnName: 'EXAMPLE_COLUMN_NAME',
-					columnType: 'EXAMPLE_COLUMN_TYPE',
-					tableName: 'EXAMPLE_DB.EXAMPLE_SCHEMA.EXAMPLE_TABLE'
-				}]
-			}, {
-				tagId: 54,
-				tagName: 'TAG_NAME_2',
-				tagSubjects: [{
-					columnName: 'EXAMPLE_COLUMN_NAME_2',
-					columnType: 'EXAMPLE_COLUMN_TYPE_2',
-					tableName: 'EXAMPLE_DB_2.EXAMPLE_SCHEMA_2.EXAMPLE_TABLE_2'
-				}]
-			}];
-
-			const altrDbsData = [
-				{
-					"id": 0,
-					"clientId": "string",
-					"friendlyDatabaseName": "EXAMPLE_DB_2",
-					"databaseName": "EXAMPLE_DB_2",
-					"databaseUsername": "string",
-					"SFCount": 0
-				}
-			];
-
-
-			const result = utils.returnNewOrUpdateDbs(tags, altrDbsData);
-			const expected = { newDbs: ['EXAMPLE_DB'], updateDbs: [{ dbName: 'EXAMPLE_DB_2', dbId: 0 }] };
-			expect(result).toStrictEqual(expected);
-		});
-	});
-
 });
 
-// RETURN NEW PROTECTED COLUMNS
-describe('TESTING returnNewGovernColumns()', () => {
-
-	describe('Passing a tagged Alation column with a corresponding ALTR database', () => {
-		it('Shall return a column to be added to ALTR', () => {
-			const tags = [{
-				tagId: 50,
-				tagName: 'EXAMPLE_TAG_NAME',
-				tagSubjects: [{
-					columnName: 'EXAMPLE_COLUMN_NAME',
-					columnType: 'EXAMPLE_COLUMN_TYPE',
-					tableName: 'EXAMPLE_DB_NAME.EXAMPLE_SCHEMA_NAME.EXAMPLE_TABLE_NAME'
-				}]
-			}];
-
-			const altrDbsData = [
+describe('TESTING filterAlationDatabaseByHost()', () => {
+	describe('Passing an array of Alation databases and hostname of "example.eu-east-1"', () => {
+		it('Shall only return databases of host "example.eu-east-1"', () => {
+			const alationDbs = [
 				{
-					"id": 0,
-					"clientId": "string",
-					"friendlyDatabaseName": "EXAMPLE_DB_NAME",
-					"databaseName": "EXAMPLE_DB_NAME",
-					"databaseUsername": "string",
-					"SFCount": 0
+					"dbtype": "snowflake",
+					"is_gone": false,
+					"deleted": false,
+					"dbname": "database1",
+					"host": "example.eu-east-1",
+					"id": 1
+				},
+				{
+					"dbtype": "snowflake",
+					"is_gone": false,
+					"deleted": false,
+					"dbname": "database2",
+					"host": "not.same",
+					"id": 2
 				}
 			];
 
-
-			const result = utils.returnNewGovernColumns(tags, altrDbsData);
-			const expected = [{ databaseId: 0, tableName: 'EXAMPLE_SCHEMA_NAME.EXAMPLE_TABLE_NAME', columnName: 'EXAMPLE_COLUMN_NAME', nickname: 'EXAMPLE_COLUMN_NAME', protectMode: 'govern' }];
-			expect(result).toStrictEqual(expected);
-		});
-	});
-
-	describe('Passing an empty list of ALTR databases', () => {
-		it('Shall return an empty array of columns to be added to ALTR', () => {
-			const tags = [{
-				tagId: 50,
-				tagName: 'EXAMPLE_TAG_NAME',
-				tagSubjects: [{
-					columnName: 'EXAMPLE_COLUMN_NAME',
-					columnType: 'EXAMPLE_COLUMN_TYPE',
-					tableName: 'EXAMPLE_DB_NAME.EXAMPLE_SCHEMA_NAME.EXAMPLE_TABLE_NAME'
-				}]
-			}];
-
-			const altrDbsData = [];
-
-			const result = utils.returnNewGovernColumns(tags, altrDbsData);
-			const expected = [];
-			expect(result).toStrictEqual(expected);
-		});
-	});
-
-	describe('Passing a tagged Alation column without a corresponding ALTR database', () => {
-		it('Shall return an empty array of columns to be added to ALTR', () => {
-			const tags = [{
-				tagId: 50,
-				tagName: 'EXAMPLE_TAG_NAME',
-				tagSubjects: [{
-					columnName: 'EXAMPLE_COLUMN_NAME',
-					columnType: 'EXAMPLE_COLUMN_TYPE',
-					tableName: 'EXAMPLE_DB_NAME.EXAMPLE_SCHEMA_NAME.EXAMPLE_TABLE_NAME'
-				}]
-			}];
-
-			const altrDbsData = [
+			const expected = [
 				{
-					"id": 0,
-					"clientId": "string",
-					"friendlyDatabaseName": "EXAMPLE_DB_NAME_NOT_MATCHING",
-					"databaseName": "EXAMPLE_DB_NAME_NOT_MATCHING",
-					"databaseUsername": "string",
-					"SFCount": 0
+					"dbtype": "snowflake",
+					"is_gone": false,
+					"deleted": false,
+					"dbname": "database1",
+					"host": "example.eu-east-1",
+					"id": 1
 				}
 			];
 
+			const result = utils.filterAlationDatabasesByHost(alationDbs, 'example.eu-east-1');
+			expect(result).toEqual(expected);
+		});
+	});
+});
 
-			const result = utils.returnNewGovernColumns(tags, altrDbsData);
+describe('TESTING filterAlationColumnsByHostname()', () => {
+	describe('Passing an array of Alation columns and hostname of "example.eu-east-1"', () => {
+		it('Shall only return columns that belong to database of host "example.eu-east-1"', () => {
+			const alationDbs = [
+				{
+					"dbtype": "snowflake",
+					"is_gone": false,
+					"deleted": false,
+					"dbname": "database1",
+					"host": "example.eu-east-1",
+					"id": 1
+				},
+				{
+					"dbtype": "snowflake",
+					"is_gone": false,
+					"deleted": false,
+					"dbname": "database2",
+					"host": "not.same",
+					"id": 2
+				}
+			];
+
+			const alationColumns = [
+				{
+					"id": 1,
+					"name": "column_1",
+					"title": "Employee Quota data sales ids",
+					"description": "Stores the sales id amount data from the employee_quota table.",
+					"ds_id": 1,
+					"key": "1.marketing_dept.employee_quota.column_1",
+				},
+				{
+					"id": 2,
+					"name": "column_2",
+					"title": "Employee Quota data sales ids",
+					"description": "Stores the sales id amount data from the employee_quota table.",
+					"ds_id": 2,
+					"key": "2.marketing_dept.employee_quota.column_2",
+				}
+			];
+
+			const expected = [
+				{
+					"id": 1,
+					"name": "column_1",
+					"title": "Employee Quota data sales ids",
+					"description": "Stores the sales id amount data from the employee_quota table.",
+					"ds_id": 1,
+					"key": "1.marketing_dept.employee_quota.column_1",
+				}
+			];
+
+			const result = utils.filterAlationColumnsByHostname(alationColumns, alationDbs, 'example.eu-east-1');
+			expect(result).toEqual(expected);
+		});
+	});
+});
+
+describe('TESTING getNewAltrDatabases()', () => {
+	describe('Passing an array of Alation columns that do not have a matching ALTR database', () => {
+		it('Shall return an array of database names that are not matching', () => {
+			const altrDbs = [
+				{
+					"id": 1,
+					"clientId": "string",
+					"friendlyDatabaseName": "database1",
+					"databaseName": "database1",
+					"databaseUsername": "string",
+					"SFCount": 0,
+					"inProgress": 0,
+					"lastConnectedTime": "2020-06-10T20:00:37.000Z"
+				}
+			];
+
+			const alationColumns = [
+				{
+					"id": 1,
+					"name": "column_1",
+					"title": "Employee Quota data sales ids",
+					"description": "Stores the sales id amount data from the employee_quota table.",
+					"ds_id": 1,
+					"key": "1.marketing_dept.employee_quota.column_1",
+				},
+				{
+					"id": 2,
+					"name": "column_2",
+					"title": "Employee Quota data sales ids",
+					"description": "Stores the sales id amount data from the employee_quota table.",
+					"ds_id": 2,
+					"key": "2.marketing_dept.employee_quota.column_2",
+				}
+			];
+
+			const expected = ['MARKETING_DEPT'];
+
+			const result = utils.getNewAltrDatabases(alationColumns, altrDbs);
+			expect(result).toEqual(expected);
+		});
+	});
+});
+
+describe('TESTING getUpdatableAltrDatabases()', () => {
+	describe('Passing an array of Alation columns that has a matching ALTR database', () => {
+		it('Shall return an array of database names that are not matching', () => {
+			const altrDbs = [
+				{
+					"id": 1,
+					"clientId": "string",
+					"friendlyDatabaseName": "database1",
+					"databaseName": "database1",
+					"databaseUsername": "string",
+					"SFCount": 0,
+					"inProgress": 0,
+					"lastConnectedTime": "2020-06-10T20:00:37.000Z"
+				}
+			];
+
+			const alationColumns = [
+				{
+					"id": 1,
+					"name": "column_1",
+					"title": "Employee Quota data sales ids",
+					"description": "Stores the sales id amount data from the employee_quota table.",
+					"ds_id": 1,
+					"key": "1.database1.employee_quota.column_1",
+				},
+				{
+					"id": 2,
+					"name": "column_2",
+					"title": "Employee Quota data sales ids",
+					"description": "Stores the sales id amount data from the employee_quota table.",
+					"ds_id": 2,
+					"key": "2.marketing_dept.employee_quota.column_2",
+				}
+			];
+
+			const nonMatchingSnowflakeColumns = [{ column: 'database3.employee_quota.column_5', tagValue: 'tag1' }];
+
+			const expected = ['DATABASE1'];
+
+			const result = utils.getUpdatableAltrDatabases(alationColumns, altrDbs, nonMatchingSnowflakeColumns);
+			expect(result).toEqual(expected);
+		});
+	});
+});
+
+describe('TESTING getNewGovernColumns()', () => {
+	describe('Passing an array of Alation columns that have a matching ALTR database', () => {
+		it('Shall return an array of column objects with necessary information to add to ALTR', () => {
+			const altrDbs = [
+				{
+					"id": 1,
+					"clientId": "string",
+					"friendlyDatabaseName": "database1",
+					"databaseName": "database1",
+					"databaseUsername": "string",
+					"SFCount": 0,
+					"inProgress": 0,
+					"lastConnectedTime": "2020-06-10T20:00:37.000Z"
+				}
+			];
+
+			const alationColumns = [
+				{
+					"id": 1,
+					"name": "column_1",
+					"title": "Employee Quota data sales ids",
+					"description": "Stores the sales id amount data from the employee_quota table.",
+					"ds_id": 1,
+					"key": "1.database1.public.employee_quota.column_1",
+				},
+				{
+					"id": 2,
+					"name": "column_2",
+					"title": "Employee Quota data sales ids",
+					"description": "Stores the sales id amount data from the employee_quota table.",
+					"ds_id": 1,
+					"key": "2.database1.public.employee_quota.column_2",
+				}
+			];
+
+			const expected = [
+				{
+					"databaseId": 1,
+					"tableName": 'PUBLIC.EMPLOYEE_QUOTA',
+					"columnName": "COLUMN_1",
+					"nickname": "COLUMN_1",
+					"protectMode": "govern"
+				},
+				{
+					"databaseId": 1,
+					"tableName": 'PUBLIC.EMPLOYEE_QUOTA',
+					"columnName": "COLUMN_2",
+					"nickname": "COLUMN_2",
+					"protectMode": "govern"
+				}
+			];
+
+			const result = utils.getNewGovernColumns(alationColumns, altrDbs);
+			expect(result).toEqual(expected);
+		});
+	});
+
+	describe('Passing an array of Alation columns that do not have a matching ALTR database', () => {
+		it('Shall return an array of column objects with necessary information to add to ALTR', () => {
+			const altrDbs = [
+				{
+					"id": 1,
+					"clientId": "string",
+					"friendlyDatabaseName": "database5",
+					"databaseName": "database5",
+					"databaseUsername": "string",
+					"SFCount": 0,
+					"inProgress": 0,
+					"lastConnectedTime": "2020-06-10T20:00:37.000Z"
+				}
+			];
+
+			const alationColumns = [
+				{
+					"id": 1,
+					"name": "column_1",
+					"title": "Employee Quota data sales ids",
+					"description": "Stores the sales id amount data from the employee_quota table.",
+					"ds_id": 1,
+					"key": "1.database1.public.employee_quota.column_1",
+				},
+				{
+					"id": 2,
+					"name": "column_2",
+					"title": "Employee Quota data sales ids",
+					"description": "Stores the sales id amount data from the employee_quota table.",
+					"ds_id": 1,
+					"key": "2.database1.public.employee_quota.column_2",
+				}
+			];
+
 			const expected = [];
-			expect(result).toStrictEqual(expected);
+
+			const result = utils.getNewGovernColumns(alationColumns, altrDbs);
+			expect(result).toEqual(expected);
+		});
+	});
+
+	describe('Passing an array of Alation columns that includes a null column', () => {
+		it('Shall return an array of column objects with necessary information to add to ALTR and skip the null column', () => {
+			const altrDbs = [
+				{
+					"id": 1,
+					"clientId": "string",
+					"friendlyDatabaseName": "database1",
+					"databaseName": "database1",
+					"databaseUsername": "string",
+					"SFCount": 0,
+					"inProgress": 0,
+					"lastConnectedTime": "2020-06-10T20:00:37.000Z"
+				}
+			];
+
+			const alationColumns = [
+				{
+					"id": 1,
+					"name": "column_1",
+					"title": "Employee Quota data sales ids",
+					"description": "Stores the sales id amount data from the employee_quota table.",
+					"ds_id": 1,
+					"key": "1.database1.public.employee_quota.column_1",
+				},
+				{
+					"id": 2,
+					"name": "column_2",
+					"title": "Employee Quota data sales ids",
+					"description": "Stores the sales id amount data from the employee_quota table.",
+					"ds_id": 1,
+					"key": "2.database1.public.employee_quota.column_2",
+				},
+				null
+			];
+
+			const expected = [
+				{
+					"databaseId": 1,
+					"tableName": 'PUBLIC.EMPLOYEE_QUOTA',
+					"columnName": "COLUMN_1",
+					"nickname": "COLUMN_1",
+					"protectMode": "govern"
+				},
+				{
+					"databaseId": 1,
+					"tableName": 'PUBLIC.EMPLOYEE_QUOTA',
+					"columnName": "COLUMN_2",
+					"nickname": "COLUMN_2",
+					"protectMode": "govern"
+				}
+			];
+
+			const result = utils.getNewGovernColumns(alationColumns, altrDbs);
+			expect(result).toEqual(expected);
+		});
+	});
+});
+
+describe('TESTING filterTaggedSnowflakeColumns()', () => {
+	describe('Passing an array of tagged Snowflake columns that have exact matching Alation columns', () => {
+		it('Shall an empty array', () => {
+			const alationColumns = [
+				{
+					"id": 1,
+					"name": "column_1",
+					"title": "Employee Quota data sales ids",
+					"description": "Stores the sales id amount data from the employee_quota table.",
+					"ds_id": 1,
+					"key": "1.database1.public.employee_quota.column_1",
+					"custom_fields": [{
+						"value": ["tag1"],
+						"field_id": 10009,
+						"field_name": "ALTR Policy Tag"
+					}]
+				},
+				{
+					"id": 2,
+					"name": "column_2",
+					"title": "Employee Quota data sales ids",
+					"description": "Stores the sales id amount data from the employee_quota table.",
+					"ds_id": 1,
+					"key": "1.database1.public.employee_quota.column_2",
+					"custom_fields": [{
+						"value": ["tag1"],
+						"field_id": 10009,
+						"field_name": "ALTR Policy Tag"
+					}]
+				}
+			];
+
+			const taggedSnowflakeColumns = [{ column: 'database1.public.employee_quota.column_1', tagValue: 'tag1' }, { column: 'database1.public.employee_quota.column_2', tagValue: 'tag1' }];
+
+			const expected = [];
+
+			const result = utils.filterTaggedSnowflakeColumns(taggedSnowflakeColumns, alationColumns);
+			expect(result).toEqual(expected);
+		});
+	});
+});
+
+describe('TESTING getAltrDatabaseObjects()', () => {
+	describe('Passing an array of ALTR databases that match array of updatable databases names', () => {
+		it('Shall return the same ALTR databases', () => {
+			const altrDbs = [
+				{
+					"id": 1,
+					"clientId": "string",
+					"friendlyDatabaseName": "database1",
+					"databaseName": "database1",
+					"databaseUsername": "string",
+					"SFCount": 0,
+					"inProgress": 0,
+					"lastConnectedTime": "2020-06-10T20:00:37.000Z"
+				}
+			];
+
+			const updatableDatabase = ['database1'];
+
+
+			const expected = [
+				{
+					"id": 1,
+					"clientId": "string",
+					"friendlyDatabaseName": "database1",
+					"databaseName": "database1",
+					"databaseUsername": "string",
+					"SFCount": 0,
+					"inProgress": 0,
+					"lastConnectedTime": "2020-06-10T20:00:37.000Z"
+				}
+			];
+
+			const result = utils.getAltrDatabaseObjects(updatableDatabase, altrDbs);
+			expect(result).toEqual(expected);
 		});
 	});
 });

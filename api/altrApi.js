@@ -2,14 +2,14 @@ const axios = require('axios');
 const axiosRetry = require('axios-retry');
 
 
-axiosRetry(axios, {
-	retries: 2,
-	retryCondition: (error) => {
-		return axiosRetry.isNetworkOrIdempotentRequestError(error)
-			|| error.response.status.toString()[0] == '4' || error.response.status.toString()[0] == '5' && error.response.status.toString() != '409';
-	},
-	retryDelay: axiosRetry.exponentialDelay,
-});
+// axiosRetry(axios, {
+// 	retries: 2,
+// 	retryCondition: (error) => {
+// 		return axiosRetry.isNetworkOrIdempotentRequestError(error)
+// 			|| error.response.status.toString()[0] == '4' || error.response.status.toString()[0] == '5' && error.response.status.toString() != '409';
+// 	},
+// 	retryDelay: axiosRetry.exponentialDelay,
+// });
 
 /**
  * Gets databases in ALTR of specific database type
@@ -144,7 +144,7 @@ exports.addSnowflakeDbPC = addSnowflakeDbPC;
  * @param {Number} dbId The database ID that correlates to the data being govern or protected belongs to
  * @returns JS Object
  */
-let updateSnowflakeDbInAltr = async (altrDomain, basicAuth, dbName, dbId) => {
+let updateSnowflakeDb = async (altrDomain, basicAuth, dbName, dbId) => {
 	let options = {
 		method: 'PATCH',
 		url: encodeURI(`https://${altrDomain}/api/databases/${dbId}`),
@@ -162,7 +162,7 @@ let updateSnowflakeDbInAltr = async (altrDomain, basicAuth, dbName, dbId) => {
 	try {
 		let response = await axios.request(options);
 		console.log('Updated ALTR database: ' + dbName);
-		return response.data;
+		return response.data.data;
 	} catch (error) {
 		console.error('PATCH update database in altr error');
 		if (error.response) {
@@ -172,7 +172,7 @@ let updateSnowflakeDbInAltr = async (altrDomain, basicAuth, dbName, dbId) => {
 		throw error;
 	}
 };
-exports.updateSnowflakeDbInAltr = updateSnowflakeDbInAltr;
+exports.updateSnowflakeDb = updateSnowflakeDb;
 
 /**
  * Adds column to ALTR
@@ -183,7 +183,7 @@ exports.updateSnowflakeDbInAltr = updateSnowflakeDbInAltr;
  * @param {String} columnName The name of the column the data being govern or protected belongs to
  * @returns JS Object
  */
-let addColumnToAltr = async (altrDomain, basicAuth, dbId, tableName, columnName) => {
+let addColumn = async (altrDomain, basicAuth, dbId, tableName, columnName) => {
 	let options = {
 		method: 'POST',
 		url: encodeURI(`https://${altrDomain}/api/data`),
@@ -203,7 +203,7 @@ let addColumnToAltr = async (altrDomain, basicAuth, dbId, tableName, columnName)
 	try {
 		let response = await axios.request(options);
 		console.log('Added ALTR column: ' + columnName);
-		return response.data;
+		return response.data.data;
 	} catch (error) {
 		if (error.response) {
 			if (error.response.status != 409) {
@@ -215,7 +215,7 @@ let addColumnToAltr = async (altrDomain, basicAuth, dbId, tableName, columnName)
 		}
 	}
 };
-exports.addColumnToAltr = addColumnToAltr;
+exports.addColumn = addColumn;
 
 /**
  * Gets snowflake account information
@@ -235,7 +235,7 @@ let getSnowflakeAccounts = async (altrDomain, basicAuth) => {
 
 	try {
 		let response = await axios.request(options);
-		return response.data.data;
+		return response.data.data.accounts;
 	} catch (error) {
 		console.error('GET altr Snowflake accounts error');
 		if (error.response) {
