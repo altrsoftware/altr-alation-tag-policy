@@ -2,14 +2,14 @@ const axios = require('axios');
 const axiosRetry = require('axios-retry');
 
 
-// axiosRetry(axios, {
-// 	retries: 2,
-// 	retryCondition: (error) => {
-// 		return axiosRetry.isNetworkOrIdempotentRequestError(error)
-// 			|| error.response.status.toString()[0] == '4' || error.response.status.toString()[0] == '5' && error.response.status.toString() != '409';
-// 	},
-// 	retryDelay: axiosRetry.exponentialDelay,
-// });
+axiosRetry(axios, {
+	retries: 2,
+	retryCondition: (error) => {
+		return axiosRetry.isNetworkOrIdempotentRequestError(error)
+			|| error.response.status.toString()[0] == '4' || error.response.status.toString()[0] == '5' && error.response.status.toString() != '409';
+	},
+	retryDelay: axiosRetry.exponentialDelay,
+});
 
 /**
  * Gets databases in ALTR of specific database type
