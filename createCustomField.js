@@ -17,9 +17,9 @@ let login = async (domain, account, password) => {
 
 		const postLoginOptions = {
 			headers: { 'Referer': url },
-		}
+		};
 
-		const data = querystring.stringify({ 'csrfmiddlewaretoken': jar.toJSON().cookies[0].value, 'ldap_user': account, 'password': password })
+		const data = querystring.stringify({ 'csrfmiddlewaretoken': jar.toJSON().cookies[0].value, 'ldap_user': account, 'password': password });
 
 		await client.post(url, data, postLoginOptions);
 		console.log(jar.toJSON());
@@ -30,7 +30,7 @@ let login = async (domain, account, password) => {
 	} catch (error) {
 		throw error;
 	}
-}
+};
 
 let main = async () => {
 	try {
@@ -63,6 +63,6 @@ let main = async () => {
 	}
 
 	console.log('\nCUSTOM FIELDS CREATED!');
-}
+};
 
 main();

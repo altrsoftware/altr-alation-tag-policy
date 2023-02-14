@@ -11,7 +11,7 @@ The ALTR + Alation Tag Policy integration is a tool to pass policy tags in Alati
 
 The tool grabs tags of each column from a custom field in Alation, applies those tag values to the corresponding column in Snowflake, imports Snowflake Object Tags into ALTR and adds said columns to ALTR to be governed.
 
-This tool is plumbing between to available API's..
+This tool is plumbing between two available API's:
 
 * [ALTR Management API](https://altrnet.live.altr.com/api/swagger/)
 
@@ -23,22 +23,19 @@ and Snowflake.
 
 The tool:
 
-01. gets Snowflake databases in Alation
-02. gets Alation columns that have 'ALTR Policy Tags' applied
-03. applies tag values to corresponding Snowflake columns
-04. gets databases in ALTR
-05. checks for corresponding Alation databases
-06. adds databases to ALTR if they have tagged columns in Alation and are currently not in ALTR
-
-07. adds tagged columns to ALTR to be governed
-08. updates existing databases in ALTR to import Snowflake Object Tags
+01. Gets columns from Alation that have 'ALTR Policy Tag' applied
+02. Gets columns from Snowflake that have 'ALATION_TAG' applied
+03. If the Snowflake column and Alation column tag values do not match it un-sets the tag in Snowflake and updates it with the correct tag values to match Alation 'ALTR Policy Tag'
+04. For any new column that's tagged in Alation, it sets the same tag in snowflake and adds the column to ALTR to be governed
+05. For any database in ALTR that contained a column that had a tag change, it updates the database to pull tag changes
+06. For any column in Alation/Snowflake that had a tag change and does not belong to an ALTR database, it adds said database to ALTR
 
 ## Why use it
 
 <a  href="https://www.altr.com/">ALTR</a> partnered with <a  href="https://www.alation.com/">Alation</a> to fill a gap between data cataloging and data governance. 
 
 
-With this powerful tool you can apply tags to a columns in Alation and automatically have those tags applied to the corresponding Snowflake columns. If ALTR is already applying policy on those tags, the new columns will automatically have the same policies applied via ALTR. If not, you can easily create a tag based policy in ALTR on that new tag.
+With this powerful tool, you can apply tags to columns in Alation and automatically have those tags applied to the corresponding Snowflake columns. If ALTR is already applying policy on those tags, the new columns will automatically have the same policies applied via ALTR. If not, you can easily create a tag-based policy in ALTR on that new tag.
 
 ## Visuals
 
@@ -108,6 +105,8 @@ Integration Flowchart:
 
 > Note: You can add more / any tags by going to *Customize Catalog* and editing options in *ALTR Policy Tags* custom field
 
+**4. Please consider the Snowflake Object Tags named 'ALATION_TAG' created and used by this integration as 'sacred'. If you manually alter/delete these tags in Snowflake it could cause problems when using the integration.**
+
 ## How To Use
 
 > **Warning:** 
@@ -144,7 +143,7 @@ This application was built using the following node packages and their respected
   
 * [node](https://nodejs.org/download/release/v16.0.0/) : 0.27.2
 
-* [snowflake-sdk](https://www.npmjs.com/package/snowflake-sdk/v/1.6.14) : 1.6.14
+* [snowflake-promise](https://www.npmjs.com/package/snowflake-promise/v/4.5.0) : 4.5.0
 
 * [tough-cookie](https://www.npmjs.com/package/tough-cookie/v/4.1.2) : 4.1.2
 
