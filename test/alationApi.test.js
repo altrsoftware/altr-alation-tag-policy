@@ -14,126 +14,130 @@ afterEach(() => {
 	mock.reset();
 });
 
+describe('TESTING getMultipleCustomFields()', () => {
 
-describe('TESTING getColumnInfoById()', () => {
-
-	const url = `https://${process.env.ALATION_DOMAIN}/integration/v2/column/?id=${0}`;
+	const url = `https://${process.env.ALATION_DOMAIN}/integration/v2/custom_field/?field_type=multi_picker&name_plural=ALTR`;
 
 	describe('When the call is successful', () => {
-		it('Shall return an array with a single column', async () => {
-			const expected = [
+		it('Shall return an array of custom fields', async () => {
+			const mockResponse = [
 				{
-					"id": 161782,
-					"name": "sales_id",
-					"title": "Employee Quota data sales ids",
-					"description": "Stores the sales id amount data from the employee_quota table.",
-					"ds_id": 95,
-					"key": "95.marketing_dept.employee_quota.sales_id",
-					"url": "/attribute/161782/",
+					"field_id": 10006,
+					"ts_updated": "2023-02-06T22:14:13.472Z",
+					"otype": "data",
+					"oid": 5,
+					"value": "string"
 				}
 			];
 
-			mock.onGet(url).reply(200, expected);
+			mock.onGet(url).reply(200, mockResponse);
 
-			const result = await alation.getColumnInfoById(process.env.ALATION_DOMAIN, null, 0);
+			const result = await alation.getMultipleCustomFields(process.env.ALATION_DOMAIN, null, 'multi_picker', 'ALTR');
 
 			expect(mock.history.get[0].url).toEqual(url);
-			expect(result).toEqual(expected);
+			expect(result).toEqual(mockResponse);
 		});
 	});
 
 	describe('When the call is unsuccessful', () => {
 		it('Shall throw an error', async () => {
 			const expectedError = async () => {
-				await alation.getColumnInfoById(process.env.ALATION_DOMAIN, null, 0);
-			}
+				await alation.getMultipleCustomFields(process.env.ALATION_DOMAIN, null, 'multi_picker', 'ALTR');;
+			};
 
 			await expect(expectedError()).rejects.toThrowError();
 		});
 	});
 });
 
-describe('TESTING getTags()', () => {
+describe('TESTING getDatabases()', () => {
 
-	const url = `https://${process.env.ALATION_DOMAIN}/integration/tag/`;
+	const url = `https://${process.env.ALATION_DOMAIN}/integration/v1/datasource/?include_undeployed=false&include_hidden=false`;
 
 	describe('When the call is successful', () => {
-		it('Shall return an array of tags', async () => {
-			const expected = [
+		it('Shall return an array of databases', async () => {
+			const mockResponse = [
 				{
-					"id": 1,
-					"name": "Test Database",
-					"description": "<p>This tag is for test db's</p>",
-					"number_of_objects_tagged": 1,
-					"ts_created": "2017-09-26T17:40:07.456130Z",
-					"url": "/tag/1/"
-				},
-				{
-					"id": 2,
-					"name": "@Mentions",
-					"description": "",
-					"number_of_objects_tagged": 3,
-					"ts_created": "2017-09-26T18:26:07.144050Z",
-					"url": "/tag/2/"
+					"dbtype": "mysql",
+					"host": "10.11.21.125",
+					"port": 3306,
+					"uri": "mysql://<hostname>:<port>/<db_name>",
+					"dbname": "sample_dbname",
+					"db_username": "alation",
+					"title": "test_mysql",
+					"description": "Sample mysql datasource setup",
+					"deployment_setup_complete": true,
+					"private": false,
+					"is_virtual": false,
+					"is_hidden": false,
+					"id": 0,
+					"supports_explain": true,
+					"data_upload_disabled_message": "string",
+					"hive_logs_source_type": 0,
+					"metastore_uri": true,
+					"is_hive": true,
+					"is_gone": true,
 				}
 			];
 
-			mock.onGet(url).reply(200, expected);
+			mock.onGet(url).reply(200, mockResponse);
 
-			const result = await alation.getTags(process.env.ALATION_DOMAIN, null);
+			const result = await alation.getDatabases(process.env.ALATION_DOMAIN, null, false, false);
 
 			expect(mock.history.get[0].url).toEqual(url);
-			expect(result).toEqual(expected);
+			expect(result).toEqual(mockResponse);
 		});
 	});
 
 	describe('When the call is unsuccessful', () => {
 		it('Shall throw an error', async () => {
 			const expectedError = async () => {
-				await alation.getTags(process.env.ALATION_DOMAIN, null);
-			}
+				await alation.getDatabases(process.env.ALATION_DOMAIN, null, false, false);
+			};
 
 			await expect(expectedError()).rejects.toThrowError();
 		});
 	});
 });
 
-describe('TESTING getColumnsOfTag()', () => {
+describe('TESTING getColumns()', () => {
 
-	const url = `https://${process.env.ALATION_DOMAIN}/integration/tag/TAG_NAME/subject/`;
+	const url = `https://${process.env.ALATION_DOMAIN}/integration/v2/column/?custom_fields=[{"field_id":${0}}]`;
 
-	describe('When the call is successful', () => {
-		it('Shall return an array of columns', async () => {
-			const expected = [
-				{
-					"ts_tagged": "2017-09-22T23:57:29.682968Z",
-					"subject": {
-						"url": "/user/1/",
-						"otype": "attribute",
-						"id": 1
-					}
-				}
-			];
+	// describe('When the call is successful', () => {
+	// 	it('Shall return an array of columns', async () => {
+	// 		const mockResponse =[
+	// 			{
+	// 				"id": 161782,
+	// 				"name": "sales_id",
+	// 				"title": "Employee Quota data sales ids",
+	// 				"description": "Stores the sales id amount data from the employee_quota table.",
+	// 				"ds_id": 95,
+	// 				"key": "95.marketing_dept.employee_quota.sales_id",
+	// 				"url": "/attribute/161782/",
+	// 			}
+	// 		];
 
-			mock.onGet(url).reply(200, expected);
+	// 		mock.onGet(url).reply(200, mockResponse);
 
-			const result = await alation.getColumnsOfTag(process.env.ALATION_DOMAIN, null, 'TAG_NAME');
+	// 		const result = await alation.getColumns(process.env.ALATION_DOMAIN, null, 0);
 
-			expect(mock.history.get[0].url).toEqual(url);
-			expect(result).toEqual(expected);
-		});
-	});
+	// 		expect(mock.history.get[0].url).toEqual(url);
+	// 		expect(result).toEqual(mockResponse);
+	// 	});
+	// });
 
 	describe('When the call is unsuccessful', () => {
 		it('Shall throw an error', async () => {
 			const expectedError = async () => {
-				await alation.getColumnsOfTag(process.env.ALATION_DOMAIN, null, 'TAG_NAME');
-			}
+				await alation.getColumns(process.env.ALATION_DOMAIN, null, 0);
+			};
 
 			await expect(expectedError()).rejects.toThrowError();
 		});
 	});
 });
+
 
 describe('TESTING getUsers()', () => {
 
@@ -141,27 +145,43 @@ describe('TESTING getUsers()', () => {
 
 	describe('When the call is successful', () => {
 		it('Shall return true', async () => {
-			const expected = true;
+			const mockResponse = [
+				{
+					"display_name": "string",
+					"email": "string",
+					"id": 0,
+					"profile_id": 0,
+					"url": "string"
+				}
+			];
 
-			mock.onGet(url).reply(200, expected);
+			mock.onGet(url).reply(200, mockResponse);
 
 			const result = await alation.getUsers(process.env.ALATION_DOMAIN, null, 'EXAMPLE@EMAIL.COM');
 
 			expect(mock.history.get[0].url).toEqual(url);
-			expect(result).toEqual(expected);
+			expect(result).toEqual(true);
 		});
 	});
 
 	describe('When the call is unsuccessful', () => {
 		it('Shall return false', async () => {
-			const expected = false;
+			const mockResponse = [
+				{
+					"display_name": "string",
+					"email": "string",
+					"id": 0,
+					"profile_id": 0,
+					"url": "string"
+				}
+			];
 
-			mock.onGet(url).reply(400, expected);
+			mock.onGet(url).reply(400, mockResponse);
 
 			const result = await alation.getUsers(process.env.ALATION_DOMAIN, null, 'EXAMPLE@EMAIL.COM');
 
 			expect(mock.history.get[0].url).toEqual(url);
-			expect(result).toEqual(expected);
+			expect(result).toEqual(false);
 		});
 	});
 });

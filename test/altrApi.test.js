@@ -13,71 +13,45 @@ afterEach(() => {
 	mock.reset();
 });
 
-describe('TESTING getAltrSnowflakeDbs()', () => {
+describe('TESTING getDatabases()', () => {
 
 	const url = `https://${process.env.ALTR_DOMAIN}/api/databases?databaseType=snowflake_external_functions`;
 
 	describe('When the call is successful', () => {
-		it('Shall return an array of objects', async () => {
-			const expected = [{
-				"id": 0,
-				"clientId": "string",
-				"friendlyDatabaseName": "string",
-				"databaseName": "string",
-				"databaseUsername": "string",
-				"SFCount": 0
-			}];
-
-			mock.onGet(url).reply(200, expected);
-
-			const result = await altr.getAltrSnowflakeDbs(process.env.ALTR_DOMAIN);
-
-			expect(mock.history.get[0].url).toEqual(url);
-			expect(result).toEqual(expected);
-		});
-	});
-
-	describe('When the call is unsuccessful', () => {
-		it('Shall throw an error', async () => {
-			const expectedError = async () => {
-				await altr.getAltrSnowflakeDbs(process.env.ALTR_DOMAIN);
-			}
-
-			await expect(expectedError()).rejects.toThrowError();
-		});
-	});
-
-});
-
-describe('TESTING addSnowflakeDbToAltr()', () => {
-
-	const url = `https://${process.env.ALTR_DOMAIN}/api/databases/`;
-
-	describe('When the call is successful', () => {
-		it('Shall return a object', async () => {
-			const expected = {
-				"friendlyDatabaseName": "string",
-				"databasePort": 0,
-				"maxNumberOfConnections": "5",
-				"maxNumberOfBatches": "15",
-				"databaseName": "string",
-				"databasePassword": "string",
+		it('Shall return an array of databases', async () => {
+			const mockResponse = {
+				"data": {
+					"databases": [
+						{
+							"id": 0,
+							"clientId": "string",
+							"friendlyDatabaseName": "string",
+							"databaseName": "string",
+							"databaseUsername": "string",
+							"SFCount": 0,
+							"inProgress": 0,
+							"lastConnectedTime": "2020-06-10T20:00:37.000Z"
+						}
+					],
+					"count": 0
+				},
+				"success": true
 			};
 
-			mock.onPost(url).reply(200, expected);
+			mock.onGet(url).reply(200, mockResponse);
 
-			const result = await altr.addSnowflakeDbToAltr(process.env.ALTR_DOMAIN, '', 'EXAMPLE_DB_NAME', 'EXAMPLE_DB_PASSWORD', 'EXAMPLE_HOSTNAME', 'EXAMPLE_DB_USERNAME', 'EXAMPLE_SNOWFLAKE_ROLE', 'EXAMPLE_WAREHOUSE_NAME');
+			const result = await altr.getDatabases(process.env.ALTR_DOMAIN, null, 'snowflake_external_functions');
 
-			expect(mock.history.post[0].url).toEqual(url);
-			expect(result).toEqual(expected);
+			expect(mock.history.get[0].url).toEqual(url);
+			expect(result).toEqual(mockResponse.data.databases);
 		});
 	});
 
 	describe('When the call is unsuccessful', () => {
 		it('Shall throw an error', async () => {
 			const expectedError = async () => {
-				await altr.addSnowflakeDbToAltr(process.env.ALTR_DOMAIN, '', 'EXAMPLE_DB_NAME', 'EXAMPLE_DB_PASSWORD', 'EXAMPLE_HOSTNAME', 'EXAMPLE_DB_USERNAME', 'EXAMPLE_SNOWFLAKE_ROLE', 'EXAMPLE_WAREHOUSE_NAME');
-			}
+				await altr.getDatabases(process.env.ALTR_DOMAIN, null, 'snowflake_external_functions');
+			};
 
 			await expect(expectedError()).rejects.toThrowError();
 		});
@@ -85,39 +59,48 @@ describe('TESTING addSnowflakeDbToAltr()', () => {
 
 });
 
-describe('TESTING updateSnowflakeDbInAltr()', () => {
-
-	const url = `https://${process.env.ALTR_DOMAIN}/api/databases/${0}`;
-
+describe('TESTING addSnowflakeDb()', () => {
+	const url = `https://${process.env.ALTR_DOMAIN}/api/databases/`;
 	describe('When the call is successful', () => {
 		it('Shall return a object', async () => {
-			const expected = {
+			const mockResponse = {
 				"data": {
 					"id": 0,
 					"friendlyDatabaseName": "string",
 					"maxNumberOfConnections": 0,
 					"maxNumberOfBatches": 0,
+					"databasePort": 0,
+					"databaseUsername": "string",
+					"databaseType": "sqlserver",
+					"databaseName": "string",
+					"hostname": "string",
+					"connectionString": true,
+					"clientId": "string",
+					"snowflakeRole": "string",
+					"warehouseName": "string",
 					"SFCount": 0,
 					"dataUsageHistory": true,
-					"classificationStarted": true
+					"classificationStarted": true,
+					"lastConnectedTime": "2020-06-10T20:00:37.000Z",
+					"inProgress": 0
 				},
 				"success": true
-			}
+			};
 
-			mock.onPatch(url).reply(200, expected);
+			mock.onPost(url).reply(200, mockResponse);
 
-			const result = await altr.updateSnowflakeDbInAltr(process.env.ALTR_DOMAIN, '', 'EXAMPLE_DB_NAME', 'EXAMPLE_DB_PASSWORD', 'EXAMPLE_HOSTNAME', 'EXAMPLE_DB_USERNAME', 'EXAMPLE_SNOWFLAKE_ROLE', 'EXAMPLE_WAREHOUSE_NAME', 0);
+			const result = await altr.addSnowflakeDb(process.env.ALTR_DOMAIN, null, 'EXAMPLE_DB_NAME', 'EXAMPLE_DB_PASSWORD', 'EXAMPLE_HOSTNAME', 'EXAMPLE_DB_USERNAME', 'EXAMPLE_SNOWFLAKE_ROLE', 'EXAMPLE_WAREHOUSE_NAME');
 
-			expect(mock.history.patch[0].url).toEqual(url);
-			expect(result).toEqual(expected);
+			expect(mock.history.post[0].url).toEqual(url);
+			expect(result).toEqual(mockResponse.data);
 		});
 	});
 
 	describe('When the call is unsuccessful', () => {
 		it('Shall throw an error', async () => {
 			const expectedError = async () => {
-				await altr.updateSnowflakeDbInAltr(process.env.ALTR_DOMAIN, '', 'EXAMPLE_DB_NAME', 'EXAMPLE_DB_PASSWORD', 'EXAMPLE_HOSTNAME', 'EXAMPLE_DB_USERNAME', 'EXAMPLE_SNOWFLAKE_ROLE', 'EXAMPLE_WAREHOUSE_NAME', 0);
-			}
+				await altr.addSnowflakeDb(process.env.ALTR_DOMAIN, '', 'EXAMPLE_DB_NAME', 'EXAMPLE_DB_PASSWORD', 'EXAMPLE_HOSTNAME', 'EXAMPLE_DB_USERNAME', 'EXAMPLE_SNOWFLAKE_ROLE', 'EXAMPLE_WAREHOUSE_NAME');
+			};
 
 			await expect(expectedError()).rejects.toThrowError();
 		});
@@ -125,6 +108,104 @@ describe('TESTING updateSnowflakeDbInAltr()', () => {
 
 });
 
+describe('TESTING addSnowflakeDbPC()', () => {
+	const url = `https://${process.env.ALTR_DOMAIN}/api/databases/snowflake/connect`;
+	describe('When the call is successful', () => {
+		it('Shall return a object', async () => {
+			const mockResponse = {
+				"data": {
+					"id": 0,
+					"friendlyDatabaseName": "string",
+					"maxNumberOfConnections": 0,
+					"maxNumberOfBatches": 0,
+					"databasePort": 0,
+					"databaseUsername": "string",
+					"databaseType": "sqlserver",
+					"databaseName": "string",
+					"hostname": "string",
+					"connectionString": true,
+					"clientId": "string",
+					"snowflakeRole": "string",
+					"warehouseName": "string",
+					"SFCount": 0,
+					"dataUsageHistory": true,
+					"classificationStarted": true,
+					"lastConnectedTime": "2020-06-10T20:00:37.000Z",
+					"inProgress": 0
+				},
+				"success": true
+			};
+
+			mock.onPost(url).reply(200, mockResponse);
+
+			const result = await altr.addSnowflakeDbPC(process.env.ALTR_DOMAIN, null, 'EXAMPLE_DB_NAME', 'EXAMPLE_DB_PASSWORD', 'EXAMPLE_HOSTNAME', 'EXAMPLE_DB_USERNAME', 'EXAMPLE_SNOWFLAKE_ROLE', 'EXAMPLE_WAREHOUSE_NAME');
+
+			expect(mock.history.post[0].url).toEqual(url);
+			expect(result).toEqual(mockResponse.data);
+		});
+	});
+
+	describe('When the call is unsuccessful', () => {
+		it('Shall throw an error', async () => {
+			const expectedError = async () => {
+				await altr.addSnowflakeDbPC(process.env.ALTR_DOMAIN, '', 'EXAMPLE_DB_NAME', 'EXAMPLE_DB_PASSWORD', 'EXAMPLE_HOSTNAME', 'EXAMPLE_DB_USERNAME', 'EXAMPLE_SNOWFLAKE_ROLE', 'EXAMPLE_WAREHOUSE_NAME');
+			};
+
+			await expect(expectedError()).rejects.toThrowError();
+		});
+	});
+});
+
+describe('TESTING updateSnowflakeDb()', () => {
+
+	const url = `https://${process.env.ALTR_DOMAIN}/api/databases/${0}`;
+
+	describe('When the call is successful', () => {
+		it('Shall return a object', async () => {
+			const mockResponse = {
+				"data": {
+					"id": 0,
+					"friendlyDatabaseName": "string",
+					"maxNumberOfConnections": 0,
+					"maxNumberOfBatches": 0,
+					"databasePort": 0,
+					"databaseUsername": "string",
+					"databaseType": "sqlserver",
+					"databaseName": "string",
+					"hostname": "string",
+					"connectionString": true,
+					"clientId": "string",
+					"snowflakeRole": "string",
+					"warehouseName": "string",
+					"SFCount": 0,
+					"dataUsageHistory": true,
+					"classificationStarted": true,
+					"lastConnectedTime": "2020-06-10T20:00:37.000Z",
+					"inProgress": 0
+				},
+				"success": true
+			};
+
+			mock.onPatch(url).reply(200, mockResponse);
+
+			const result = await altr.updateSnowflakeDb(process.env.ALTR_DOMAIN, '', 'EXAMPLE_DB_NAME', 0);
+
+			expect(mock.history.patch[0].url).toEqual(url);
+			expect(result).toEqual(mockResponse.data);
+		});
+	});
+
+	describe('When the call is unsuccessful', () => {
+		it('Shall throw an error', async () => {
+			const expectedError = async () => {
+				await altr.updateSnowflakeDb(process.env.ALTR_DOMAIN, '', 'EXAMPLE_DB_NAME', 0);
+			};
+
+			await expect(expectedError()).rejects.toThrowError();
+		});
+	});
+
+});
 
 describe('TESTING addColumnToAltr()', () => {
 
@@ -132,7 +213,7 @@ describe('TESTING addColumnToAltr()', () => {
 
 	describe('When the call is successful', () => {
 		it('Shall return a object', async () => {
-			const expected = {
+			const mockResponse = {
 				"data": {
 					"fieldId": 28,
 					"nickname": "userNameWithLocks",
@@ -149,22 +230,22 @@ describe('TESTING addColumnToAltr()', () => {
 					"databaseHelperId": "f6450e74-f327-40ec-8d04-25acda3d9256"
 				},
 				"success": true
-			}
+			};
 
-			mock.onPost(url).reply(200, expected);
+			mock.onPost(url).reply(200, mockResponse);
 
-			const result = await altr.addColumnToAltr(process.env.ALTR_DOMAIN, '', 0, 'TABLE_NAME_EXAMPLE', 'COLUMN_NAME_EXAMPLE');
+			const result = await altr.addColumn(process.env.ALTR_DOMAIN, '', 0, 'TABLE_NAME_EXAMPLE', 'COLUMN_NAME_EXAMPLE');
 
 			expect(mock.history.post[0].url).toEqual(url);
-			expect(result).toEqual(expected);
+			expect(result).toEqual(mockResponse.data);
 		});
 	});
 
 	describe('When the call is unsuccessful', () => {
 		it('Shall throw an error', async () => {
 			const expectedError = async () => {
-				await altr.addColumnToAltr(process.env.ALTR_DOMAIN, '', 0, 'TABLE_NAME_EXAMPLE', 'COLUMN_NAME_EXAMPLE');
-			}
+				await altr.addColumn(process.env.ALTR_DOMAIN, '', 0, 'TABLE_NAME_EXAMPLE', 'COLUMN_NAME_EXAMPLE');
+			};
 
 			await expect(expectedError()).rejects.toThrowError();
 		});
@@ -172,39 +253,45 @@ describe('TESTING addColumnToAltr()', () => {
 
 });
 
+describe('TESTING getSnowflakeAccounts()', () => {
 
-describe('TESTING getClassificationStatus()', () => {
-
-	const url = `https://${process.env.ALTR_DOMAIN}/api/classification/status/${0}`;
+	const url = `https://${process.env.ALTR_DOMAIN}/api/databases/snowflake/accounts`;
 
 	describe('When the call is successful', () => {
-		it('Shall return a object', async () => {
-			const expected = {
-				"Status": "IN_PROGRESS",
-				"StatusTime": 0
-			}
+		it('Shall return an array of accounts', async () => {
+			const mockResponse = {
+				"data": {
+					"accounts": [
+						{
+							"id": 0,
+							"name": "string",
+							"username": "string"
+						}
+					]
+				},
+				"success": true
+			};
 
-			mock.onGet(url).reply(200, expected);
+			mock.onGet(url).reply(200, mockResponse);
 
-			const result = await altr.getClassificationStatus(process.env.ALTR_DOMAIN, '', 0);
+			const result = await altr.getSnowflakeAccounts(process.env.ALTR_DOMAIN, null);
 
 			expect(mock.history.get[0].url).toEqual(url);
-			expect(result).toEqual(expected);
+			expect(result).toEqual(mockResponse.data.accounts);
 		});
 	});
 
 	describe('When the call is unsuccessful', () => {
 		it('Shall throw an error', async () => {
 			const expectedError = async () => {
-				await altr.getClassificationStatus(process.env.ALTR_DOMAIN, '', 0);
-			}
+				await altr.getSnowflakeAccounts(process.env.ALTR_DOMAIN, null);
+			};
 
 			await expect(expectedError()).rejects.toThrowError();
 		});
 	});
 
 });
-
 
 describe('TESTING getAdministrators()', () => {
 
@@ -212,29 +299,74 @@ describe('TESTING getAdministrators()', () => {
 
 	describe('When the call is successful', () => {
 		it('Shall return true', async () => {
-			const expected = true;
+			const mockResponse = {
+				"data": {
+					"administrators": [
+						{
+							"id": 100,
+							"firstName": "George",
+							"lastName": "Washington",
+							"name": "Washington, George",
+							"email": "George@altr.com",
+							"phone": 1115555555,
+							"phoneNumber": "+11115555555",
+							"activityTimestamp": "2023-02-07T15:43:14.906Z",
+							"userStatus": "active",
+							"role": "SUPERADMINISTRATOR",
+							"countryCode": 1,
+							"createdAt": "2020-06-10T20:00:37.000Z",
+							"isLocked": false
+						}
+					],
+					"count": 1
+				},
+				"success": true
+			};
 
-			mock.onGet(url).reply(200, expected);
+			mock.onGet(url).reply(200, mockResponse);
 
-			const result = await altr.getAdministrators(process.env.ALTR_DOMAIN);
+			const result = await altr.getAdministrators(process.env.ALTR_DOMAIN, null);
 
 			expect(mock.history.get[0].url).toEqual(url);
-			expect(result).toEqual(expected);
+			expect(result).toEqual(true);
 		});
 	});
 
 	describe('When the call is unsuccessful', () => {
 		it('Shall return false', async () => {
-			const expected = false;
+			const mockResponse = {
+				"data": {
+					"administrators": [
+						{
+							"id": 100,
+							"firstName": "George",
+							"lastName": "Washington",
+							"name": "Washington, George",
+							"email": "George@altr.com",
+							"phone": 1115555555,
+							"phoneNumber": "+11115555555",
+							"activityTimestamp": "2023-02-07T15:43:14.906Z",
+							"userStatus": "active",
+							"role": "SUPERADMINISTRATOR",
+							"countryCode": 1,
+							"createdAt": "2020-06-10T20:00:37.000Z",
+							"isLocked": false
+						}
+					],
+					"count": 1
+				},
+				"success": true
+			};
 
-			mock.onGet(url).reply(400, expected);
+			mock.onGet(url).reply(400, mockResponse);
 
-			const result = await altr.getAdministrators(process.env.ALTR_DOMAIN);
+			const result = await altr.getAdministrators(process.env.ALTR_DOMAIN, null);
 
 			expect(mock.history.get[0].url).toEqual(url);
-			expect(result).toEqual(expected);
+			expect(result).toEqual(false);
 		});
 	});
 
 });
+
 

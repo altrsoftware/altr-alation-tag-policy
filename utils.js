@@ -1,68 +1,107 @@
 /**
- * Filters out Alation databases to only include specified type
+ * Filters out Alation databases that are not of specified type
  * @param {Array} alationDbs Alation databases
  * @param {String} dbType Database type
- * @returns JS Array
+ * @returns Array of Alation databases that match specified type
  */
-let filterAlationDbs = (alationDbs, dbType) => {
+let filterAlationDatabasesByType = (alationDbs, dbType) => {
 	return alationDbs.filter(db => db.dbtype == dbType && db.is_gone == false && db.deleted == false && db.dbname != null);
-}
-exports.filterAlationDbs = filterAlationDbs;
+};
+exports.filterAlationDatabasesByType = filterAlationDatabasesByType;
 
 /**
- * Filters our Alation columns that are part of a database in a snowflake host that is specified in the environment variables
- * @param {Array} alationColumns 
- * @param {Array}} alationDbs 
- * @param {String} hostname 
- * @returns 
+ * Filters Alation databases that are not from specified host 
+ * @param {Array} alationDbs Alation databases
+ * @param {String} hostname hostname
+ * @returns Array of Alation databases that come from specified host
  */
-let filterAlationColumns = (alationColumns, alationDbs, hostname) => {
+let filterAlationDatabasesByHost = (alationDbs, hostname) => {
+	return alationDbs.filter(database => database.host.toUpperCase() == hostname.toUpperCase());
+};
+exports.filterAlationDatabasesByHost = filterAlationDatabasesByHost;
+
+/**
+ * Filters out Alation columns that are not from specified host
+ * @param {Array} alationColumns Alation columns
+ * @param {Array} alationDbs Alation databases
+ * @param {String} hostname hostname
+ * @returns Array of Alation columns that come from specified host
+ */
+let filterAlationColumnsByHostname = (alationColumns, alationDbs, hostname) => {
 	return alationColumns.filter(column => {
 		let database = alationDbs.find(database => column.ds_id == database.id);
-		return database.host.toUpperCase() == hostname.toUpperCase();
+		if (database != null) return database.host.toUpperCase() == hostname.toUpperCase();
 	});
-}
-exports.filterAlationColumns = filterAlationColumns;
+};
+exports.filterAlationColumnsByHostname = filterAlationColumnsByHostname;
 
 /**
- * Sorts which databases are already in ALTR and which need to be added to ALTR
- * @param {Array} alationColumns Columns in Alation
+ * Gets databases that need to be added to ALTR by comparing Alation databases (parsed from column information) with ALTR databases 
+ * @param {Array} alationColumns Alation columns
  * @param {Array} altrDbs ALTR databases
- * @returns JS Object
+ * @returns Array of database names that need to be added to ALTR
  */
-let returnNewAndOldDbs = (alationColumns, altrDbs) => {
-	let alationDbNames = [];
+let getNewAltrDatabases = (alationColumns, altrDbs) => {
+	let alationDbNames = new Set();
+	let altrDbNames = new Set();
+
+	// Gets Alation database names
+	for (const column of alationColumns) {
+		if (column != null) alationDbNames.add(column.key.split('.')[1].toUpperCase());
+	}
+
+	// Gets ALTR database names
+	for (const db of altrDbs) {
+		if (db != null) altrDbNames.add(db.databaseName.toUpperCase());
+	}
+
+	// Compare sets and remove database names that exist in both sets
+	for (const altrDbName of altrDbNames) {
+		alationDbNames.delete(altrDbName);
+	}
+
+	return Array.from(alationDbNames);
+};
+exports.getNewAltrDatabases = getNewAltrDatabases;
+
+/**
+ * Compares Alation databases (parsed from column information) with ALTR databases and gets updatable ALTR databases
+ * @param {Array} alationColumns Alation columns
+ * @param {Array} altrDbs ALTR databases
+ * @returns Array of database names that need to be updated in ALTR (Already exist in ALTR)
+ */
+let getUpdatableAltrDatabases = (alationColumns, altrDbs, nonMatchingSnowflakeColumns) => {
+	let alationDbNames = new Set();
 	let altrDbNames = [];
+	let databasesFromNonMatchingSnowflakeColumns = new Set();
 
 	// Gets all Alation database names
 	for (const column of alationColumns) {
-		if (column != null) alationDbNames.push(column.key.split('.')[1].toUpperCase());
+		if (column != null) alationDbNames.add(column.key.split('.')[1].toUpperCase());
 	}
+	alationDbNames = Array.from(alationDbNames);
 
 	// Gets ALTR database names
 	for (const db of altrDbs) {
 		if (db != null) altrDbNames.push(db.databaseName.toUpperCase());
 	}
 
-	// If Alation database has no corresponding ALTR database 
-	let newDbs = [...new Set(alationDbNames.filter(alationDbName => !altrDbNames.includes(alationDbName)))];
+	for (const column of nonMatchingSnowflakeColumns) {
+		if (column != null) databasesFromNonMatchingSnowflakeColumns.add(column.column.split('.')[0]);
+	}
+	databasesFromNonMatchingSnowflakeColumns = Array.from(databasesFromNonMatchingSnowflakeColumns);
 
-	// If Alation database has a corresponding ALTR database
-	let oldDbs = [...new Set(alationDbNames.filter(alationDbName => altrDbNames.includes(alationDbName)))];
-
-	// Add database id for old databases (for updating later on)
-	let finalOldDbs = [];
-	for (const db of oldDbs) {
-		let altrDb = altrDbs.find(altrDb => altrDb.databaseName.toUpperCase() === db);
-		finalOldDbs.push({ dbName: altrDb.databaseName.toUpperCase(), dbId: altrDb.id })
+	// Compare sets and remove database names that exist in both sets
+	let updatableDbs = [];
+	for (const altrDbName of altrDbNames) {
+		let foundMatchingAlationDatabase = alationDbNames.some(alationDbName => alationDbName == altrDbName);
+		let foundMatchingNMSCDatabase = databasesFromNonMatchingSnowflakeColumns.some(databaseName => databaseName == altrDbName);
+		if (foundMatchingAlationDatabase || foundMatchingNMSCDatabase) updatableDbs.push(altrDbName);
 	}
 
-	return {
-		newDbs: newDbs,
-		oldDbs: finalOldDbs
-	}
-}
-exports.returnNewAndOldDbs = returnNewAndOldDbs;
+	return updatableDbs;
+};
+exports.getUpdatableAltrDatabases = getUpdatableAltrDatabases;
 
 /**
  * Creates a list of columns to be governed by ALTR from Alation tags
@@ -70,7 +109,7 @@ exports.returnNewAndOldDbs = returnNewAndOldDbs;
  * @param {Array} altrDbs ALTR databases
  * @returns JS Array of Objects
  */
-let returnNewGovernColumns = (alationColumns, altrDbs) => {
+let getNewGovernColumns = (alationColumns, altrDbs) => {
 	let governColumns = [];
 
 	for (const column of alationColumns) {
@@ -84,5 +123,46 @@ let returnNewGovernColumns = (alationColumns, altrDbs) => {
 	}
 
 	return governColumns;
-}
-exports.returnNewGovernColumns = returnNewGovernColumns;
+};
+exports.getNewGovernColumns = getNewGovernColumns;
+
+/**
+	* Filters out Snowflake columns that are tagged and have matching tag in Alation
+ * @param {Array} taggedSnowflakeColumns Snowflake columns that are tagged
+ * @param {Array} alationColumns Alation columns
+ * @returns Array of Snowflake columns
+ */
+let filterTaggedSnowflakeColumns = (taggedSnowflakeColumns, alationColumns) => {
+	return taggedSnowflakeColumns.filter(snowflakeColumn => {
+		return !alationColumns.some(alationColumn => {
+			let columnsMatch = alationColumn.key.split('.')[1].toUpperCase() == snowflakeColumn.column.split('.')[0].toUpperCase()
+				&& alationColumn.key.split('.')[2].toUpperCase() == snowflakeColumn.column.split('.')[1].toUpperCase()
+				&& alationColumn.key.split('.')[3].toUpperCase() == snowflakeColumn.column.split('.')[2].toUpperCase()
+				&& alationColumn.key.split('.')[4].toUpperCase() == snowflakeColumn.column.split('.')[3].toUpperCase();
+
+			let altrPolicyTags = alationColumn.custom_fields.find(field => field.field_name == 'ALTR Policy Tag');
+			let tagValueMatch = altrPolicyTags.value.some(tag => tag == snowflakeColumn.tagValue);
+
+			return columnsMatch && tagValueMatch;
+
+		});
+	});
+};
+exports.filterTaggedSnowflakeColumns = filterTaggedSnowflakeColumns;
+
+/**
+ * For each updatable database in updatableDatabases, get the matching ALTR databases
+ * @param {Array} updatableDatabases Databases that should be updated
+ * @param {Array} altrDatabases ALTR databases
+ * @returns Array of ALTR databases
+ */
+let getAltrDatabaseObjects = (updatableDatabases, altrDatabases) => {
+	let updatableAltrDatabases = [];
+
+	for (const updatableDatabase of updatableDatabases) {
+		updatableAltrDatabases.push(altrDatabases.find(altrDatabase => altrDatabase.databaseName == updatableDatabase));
+	}
+
+	return updatableAltrDatabases;
+};
+exports.getAltrDatabaseObjects = getAltrDatabaseObjects;

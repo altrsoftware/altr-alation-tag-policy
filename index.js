@@ -1,7 +1,6 @@
 require('dotenv').config();
 const alation = require('./api/alationApi.js');
 const altr = require('./api/altrApi');
-// const snowflake = require('./sfOperations.js');
 const snowflake = require('./snowflakeOperations.js');
 const utils = require('./utils');
 
@@ -21,80 +20,84 @@ let main = async () => {
 			// Gets custom field in Alation named, 'Policy Tags' 
 			let alationCustomFields = await alation.getMultipleCustomFields(process.env.ALATION_DOMAIN, process.env.ALATION_API_ACCESS_TOKEN, 'MULTI_PICKER', 'ALTR Policy Tags');
 			if (alationCustomFields.length == 0) throw new Error('\n Custom Field (MULTI PICKER) "ALTR Policy Tags" is missing in your Alation environment. \n Please follow the Readme "Before using this tool" section.');
-			
+			if (alationCustomFields.length > 1) throw new Error('\n Only one Custom Field (MULTI PICKER) "ALTR Policy Tags" can exist in your Alation environment. \n Please remove duplicates');
 			let alationCustomFieldId = alationCustomFields[0].id;
-			console.log('\nALATION CUSTOM FIELDS:');
-			console.log(alationCustomFields.map(value => value.name_plural));
 
 			// Gets all databases in Alation
-			let alationDbs = await alation.getDatabases(process.env.ALATION_DOMAIN, process.env.ALATION_API_ACCESS_TOKEN, false, true);
-			if (alationDbs.length == 0) throw new Error('\n There are currently 0 databases in your Alation instance.');
+			let alationDatabases = await alation.getDatabases(process.env.ALATION_DOMAIN, process.env.ALATION_API_ACCESS_TOKEN, false, true);
+			if (alationDatabases.length == 0) throw new Error('\n There are currently 0 databases in your Alation instance.');
 
 			// Filters out databases that are not from Snowflake
-			alationDbs = utils.filterAlationDbs(alationDbs, 'snowflake');
-			if (alationDbs.length == 0) throw new Error('\n This tool only works for Snowflake databases. \n There are currently 0 usable Snowflake databases in your Alation environment.');
-			console.log('\nALATION SNOWFLAKE DATABASES: ' + alationDbs.length);
-			console.log(alationDbs.map(value => value.dbname));
-
-			// Gets all columns in Alation that have 'Policy Tags' set
-			let alationColumns = await alation.getColumns(process.env.ALATION_DOMAIN, process.env.ALATION_API_ACCESS_TOKEN, alationCustomFieldId);
-			alationColumns = utils.filterAlationColumns(alationColumns, alationDbs, process.env.SF_HOSTNAME);
-			if (alationColumns.length == 0) throw new Error('\n No columns were found that contain "ALTR Policy Tags" values.');
-			console.log('\nALATION COLUMNS OF SPECIFIED SNOWFLAKE HOSTNAME: ' + alationColumns.length);
-			console.log(alationColumns.map(value => value.key));
-
-			// Updates corresponding Snowflake columns with 'ALTR Policy Tags'
-			await snowflake.applyPolicyTags(process.env.SF_ACCOUNT, process.env.SF_DB_USERNAME, process.env.SF_DB_PASSWORD, process.env.SF_ROLE, alationColumns, alationCustomFieldId);
+			alationDatabases = utils.filterAlationDatabasesByType(alationDatabases, 'snowflake');
+			alationDatabases = utils.filterAlationDatabasesByHost(alationDatabases, process.env.SF_HOSTNAME);
+			if (alationDatabases.length == 0) throw new Error('\n This tool only works for Snowflake databases. \n There are currently 0 usable Snowflake databases in your Alation environment.');
+			console.log('\nALATION SNOWFLAKE DATABASES: ' + alationDatabases.length);
+			console.log(alationDatabases.map(value => value.dbname));
 
 			// Gets Snowflake databases in ALTR
-			let altrDbs = await altr.getDatabases(process.env.ALTR_DOMAIN, ALTR_AUTH, 'snowflake_external_functions');
-			console.log('\nALTR DATABASES: ' + altrDbs.databases.length);
-			console.log(altrDbs.databases.map(value => value.databaseName));
+			let altrDatabases = await altr.getDatabases(process.env.ALTR_DOMAIN, ALTR_AUTH, 'snowflake_external_functions');
+			console.log('\nALTR DATABASES: ' + altrDatabases.length);
+			console.log(altrDatabases.map(value => value.databaseName));
 
-			// Creates a list of databases to be added to ALTR and a list of databases that are already in ALTR
-			let newAndOldDbs = utils.returnNewAndOldDbs(alationColumns, altrDbs.databases);
-			console.log('\nNEW AND OLD DATABASES: ');
-			console.dir(newAndOldDbs, { depth: null });
+			// Gets all columns in Alation that have 'ALTR Policy Tags' set
+			let alationColumns = await alation.getColumns(process.env.ALATION_DOMAIN, process.env.ALATION_API_ACCESS_TOKEN, alationCustomFieldId);
+			alationColumns = utils.filterAlationColumnsByHostname(alationColumns, alationDatabases, process.env.SF_HOSTNAME);
+			console.log('\nALATION COLUMNS: ' + alationColumns.length);
+			console.log(alationColumns.map(value => value.key));
+
+			// Gets all Snowflake columns tagged by 'ALATION_TAG'
+			let taggedSnowflakeColumns = await snowflake.getTaggedColumnsFromDatabases(process.env.SF_ACCOUNT, process.env.SF_DB_USERNAME, process.env.SF_DB_PASSWORD, process.env.SF_ROLE, alationDatabases, 'ALATION_TAG');
+
+			// Gets all snowflake columns that are tagged in Snowflake but not tagged in Alation
+			let nonMatchingSnowflakeColumns = utils.filterTaggedSnowflakeColumns(taggedSnowflakeColumns, alationColumns);
+
+			// Unset tag from Snowflake columns if matching Alation column does not have tag or the same tag value
+			if (nonMatchingSnowflakeColumns.length != 0) await snowflake.dropPolicyTags(process.env.SF_ACCOUNT, process.env.SF_DB_USERNAME, process.env.SF_DB_PASSWORD, process.env.SF_ROLE, nonMatchingSnowflakeColumns);
+
+			// Sets 'ALTR Policy Tags' on Snowflake columns
+			if (alationColumns.length != 0) await snowflake.applyPolicyTags(process.env.SF_ACCOUNT, process.env.SF_DB_USERNAME, process.env.SF_DB_PASSWORD, process.env.SF_ROLE, alationColumns, alationCustomFieldId);
+
+			// Gets list of databases that need to be added to ALTR
+			let newAltrDatabases = utils.getNewAltrDatabases(alationColumns, altrDatabases);
 
 			// Add new Snowflake databases to ALTR (if Partner Connect else Self made ALTR Service User)
-			if (newAndOldDbs.newDbs.length != 0) {
-				if (process.env.SF_ROLE === 'PC_ALTR_ROLE') {
+			if (newAltrDatabases.length != 0) {
+				if (process.env.SF_ROLE.toUpperCase() === 'PC_ALTR_ROLE') {
 					let accounts = await altr.getSnowflakeAccounts(process.env.ALTR_DOMAIN, ALTR_AUTH);
-					let accountId = accounts.accounts.find(account => account.name.toUpperCase().includes(process.env.SF_HOSTNAME.toUpperCase())).id;
+					let accountId = accounts.find(account => account.name.toUpperCase().includes(process.env.SF_HOSTNAME.toUpperCase())).id;
 
-					for (const newDb of newAndOldDbs.newDbs) {
-						let response = await altr.addSnowflakeDbPC(process.env.ALTR_DOMAIN, ALTR_AUTH, newDb, accountId);
+					for (const database of newAltrDatabases) {
+						let response = await altr.addSnowflakeDbPC(process.env.ALTR_DOMAIN, ALTR_AUTH, database, accountId);
 						dbIds.push(response.id);
 					}
 				} else {
-					for (const newDb of newAndOldDbs.newDbs) {
-						let response = await altr.addSnowflakeDb(process.env.ALTR_DOMAIN, ALTR_AUTH, newDb, process.env.SF_DB_PASSWORD, process.env.SF_HOSTNAME, process.env.SF_DB_USERNAME, process.env.SF_ROLE, process.env.SF_WAREHOUSE);
+					for (const database of newAltrDatabases) {
+						let response = await altr.addSnowflakeDb(process.env.ALTR_DOMAIN, ALTR_AUTH, database, process.env.SF_DB_PASSWORD, process.env.SF_HOSTNAME, process.env.SF_DB_USERNAME, process.env.SF_ROLE, process.env.SF_WAREHOUSE);
 						dbIds.push(response.id);
 					}
 				}
 			}
 
 			// Refresh ALTR database list
-			altrDbs = await altr.getDatabases(process.env.ALTR_DOMAIN, ALTR_AUTH, 'snowflake_external_functions');
-			console.log('\nREFRESHED ALTR DATABASES: ' + altrDbs.databases.length);
-			console.log(altrDbs.databases.map(value => value.databaseName));
+			altrDatabases = await altr.getDatabases(process.env.ALTR_DOMAIN, ALTR_AUTH, 'snowflake_external_functions');
 
-			// Creates a list of columns that ALTR will 'govern' from Alation columns
-			let governColumns = utils.returnNewGovernColumns(alationColumns, altrDbs.databases);
-			console.log('\nALTR GOVERN COLUMNS: ' + governColumns.length);
+			// Creates a list of columns that ALTR will 'govern' from Alation columns list
+			let governColumns = utils.getNewGovernColumns(alationColumns, altrDatabases);
+			console.log('\nNEW GOVERNED COLUMNS IN ALTR: ' + governColumns.length);
 			console.dir(governColumns.map(value => `${value.databaseId}.${value.tableName}.${value.columnName}`));
 
 			// Adds columns to ALTR from the list of 'govern' columns
 			for (const column of governColumns) {
-				await altr.addColumnToAltr(process.env.ALTR_DOMAIN, ALTR_AUTH, column.databaseId, column.tableName, column.columnName);
+				await altr.addColumn(process.env.ALTR_DOMAIN, ALTR_AUTH, column.databaseId, column.tableName, column.columnName);
 			}
 
-			// Refreshes list of new and old databases (Should only have 'old' now)
-			newAndOldDbs = utils.returnNewAndOldDbs(alationColumns, altrDbs.databases);
+			// Get list of updatable ALTR databases
+			let updatableDatabases = utils.getUpdatableAltrDatabases(alationColumns, altrDatabases, nonMatchingSnowflakeColumns);
+			let updatableAltrDatabases = utils.getAltrDatabaseObjects(updatableDatabases, altrDatabases);
 
-			// Updates old ALTR databases to import Snowflake Object Tags
-			for (const oldDb of newAndOldDbs.oldDbs) {
-				await altr.updateSnowflakeDbInAltr(process.env.ALTR_DOMAIN, ALTR_AUTH, oldDb.dbName, oldDb.dbId);
+			// Update databases
+			for (const database of updatableAltrDatabases) {
+				await altr.updateSnowflakeDb(process.env.ALTR_DOMAIN, ALTR_AUTH, database.databaseName, database.id);
 			}
 
 		} catch (error) {

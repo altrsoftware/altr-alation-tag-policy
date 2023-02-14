@@ -36,7 +36,7 @@ let getMultipleCustomFields = async (alationDomain, alationApiAccessToken, field
 		}
 		throw error;
 	}
-}
+};
 exports.getMultipleCustomFields = getMultipleCustomFields;
 
 /**
@@ -65,7 +65,7 @@ let getDatabases = async (alationDomain, alationApiAccessToken, includeUndeploye
 		}
 		throw error;
 	}
-}
+};
 exports.getDatabases = getDatabases;
 
 /**
@@ -108,7 +108,7 @@ let getUsers = async (alationDomain, alationApiAccessToken, email) => {
 		method: 'GET',
 		url: encodeURI(`https://${alationDomain}/integration/v1/user/?email=${email}&limit=100&skip=0`),
 		headers: { TOKEN: alationApiAccessToken, accept: 'application/json' }
-	}
+	};
 
 	try {
 		await axios.request(options);

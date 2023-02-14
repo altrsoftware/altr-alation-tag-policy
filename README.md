@@ -23,15 +23,12 @@ and Snowflake.
 
 The tool:
 
-01. gets Snowflake databases in Alation
-02. gets Alation columns that have 'ALTR Policy Tags' applied
-03. applies tag values to corresponding Snowflake columns
-04. gets databases in ALTR
-05. checks for corresponding Alation databases
-06. adds databases to ALTR if they have tagged columns in Alation and are currently not in ALTR
-
-07. adds tagged columns to ALTR to be governed
-08. updates existing databases in ALTR to import Snowflake Object Tags
+01. Gets columns from Alation that have 'ALTR Policy Tag' applied
+02. Gets columns from Snowflake that have 'ALATION_TAG' applied
+03. If the Snowflake column and Alation column tag values do not match it un-sets the tag in Snowflake and updates it with the correct tag values to match Alation 'ALTR Policy Tag'
+04. For any new column that's tagged in Alation, it sets the same tag in snowflake and adds the column to ALTR to be governed
+05. For any database in ALTR that contained a column that had a tag change, it updates the database to pull tag changes
+06. For any column in Alation/Snowflake that had a tag change and does not belong to an ALTR database, it adds said database to ALTR
 
 ## Why use it
 
@@ -107,6 +104,8 @@ Integration Flowchart:
 06. At the top of the template, click *Save*
 
 > Note: You can add more / any tags by going to *Customize Catalog* and editing options in *ALTR Policy Tags* custom field
+
+**4. Please consider the Snowflake Object Tags named 'ALATION_TAG' created and used by this integration as 'sacred'. If you manually alter/delete these tags in Snowflake it could cause problems when using the integration.**
 
 ## How To Use
 
